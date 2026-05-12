@@ -8,7 +8,6 @@ Personal Claude Code + iTerm2 config, synced across machines.
 | --- | --- |
 | `claude/settings.json` | `~/.claude/settings.json` |
 | `claude/statusline.sh` | `~/.claude/statusline.sh` |
-| `claude/statusline-command.sh` | `~/.claude/statusline-command.sh` |
 | `iterm/Default.json` | `~/Library/Application Support/iTerm2/DynamicProfiles/Default.json` |
 | `iterm/app-prefs.json` | merged into `~/Library/Preferences/com.googlecode.iterm2.plist` |
 
@@ -43,9 +42,8 @@ After tweaking settings locally, re-export and commit:
 
 ```bash
 # Claude
-cp ~/.claude/settings.json          claude/settings.json
-cp ~/.claude/statusline.sh          claude/statusline.sh
-cp ~/.claude/statusline-command.sh  claude/statusline-command.sh
+cp ~/.claude/settings.json  claude/settings.json
+cp ~/.claude/statusline.sh  claude/statusline.sh
 
 # iTerm — re-export the Default profile
 /usr/libexec/PlistBuddy -x -c 'Print :"New Bookmarks":0' \

@@ -52,10 +52,9 @@ backup_and_install() {
 # --- Claude ----------------------------------------------------------------
 
 log "Installing Claude settings into ~/.claude/"
-backup_and_install "$REPO_DIR/claude/settings.json"          "$HOME/.claude/settings.json"
-backup_and_install "$REPO_DIR/claude/statusline.sh"          "$HOME/.claude/statusline.sh"
-backup_and_install "$REPO_DIR/claude/statusline-command.sh"  "$HOME/.claude/statusline-command.sh"
-chmod +x "$HOME/.claude/statusline.sh" "$HOME/.claude/statusline-command.sh"
+backup_and_install "$REPO_DIR/claude/settings.json" "$HOME/.claude/settings.json"
+backup_and_install "$REPO_DIR/claude/statusline.sh" "$HOME/.claude/statusline.sh"
+chmod +x "$HOME/.claude/statusline.sh"
 
 # --- iTerm2 ----------------------------------------------------------------
 
