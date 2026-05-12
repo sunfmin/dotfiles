@@ -15,10 +15,17 @@ The iTerm profile is shipped as an [iTerm2 Dynamic Profile](https://iterm2.com/d
 
 ## Install
 
+One-liner — the script self-bootstraps by cloning the repo into `/tmp` and re-running itself:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/sunfmin/claude-settings/main/install.sh | bash
+```
+
+Or from a local clone:
+
 ```bash
 git clone https://github.com/sunfmin/claude-settings.git
-cd claude-settings
-./install.sh
+cd claude-settings && ./install.sh
 ```
 
 Existing files are backed up to `<file>.bak-<timestamp>` before being overwritten — nothing is lost.

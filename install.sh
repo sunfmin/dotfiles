@@ -1,10 +1,32 @@
 #!/usr/bin/env bash
 # Install Claude Code settings, statusline scripts, and iTerm2 profile.
 # Existing files are backed up to <file>.bak-<timestamp> before being overwritten.
+#
+# Usage:
+#   ./install.sh                       # from a local clone
+#   curl -fsSL https://raw.githubusercontent.com/sunfmin/claude-settings/main/install.sh | bash
+#                                      # self-bootstraps: clones the repo to /tmp and reruns
 
 set -euo pipefail
 
-REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_URL="https://github.com/sunfmin/claude-settings.git"
+
+# Resolve where this script lives. When piped from curl, BASH_SOURCE[0] is empty
+# or unreliable, so we treat that as "not a local clone" and bootstrap.
+SELF="${BASH_SOURCE[0]:-}"
+if [[ -n "$SELF" && -f "$SELF" ]]; then
+    REPO_DIR="$(cd "$(dirname "$SELF")" && pwd)"
+else
+    REPO_DIR=""
+fi
+
+if [[ -z "$REPO_DIR" || ! -f "$REPO_DIR/claude/settings.json" ]]; then
+    TMP_DIR="/tmp/claude-settings-$(date +%Y%m%d-%H%M%S)"
+    printf '\033[1;34m==>\033[0m Bootstrapping: cloning %s into %s\n' "$REPO_URL" "$TMP_DIR"
+    git clone --depth=1 "$REPO_URL" "$TMP_DIR"
+    exec bash "$TMP_DIR/install.sh"
+fi
+
 TS="$(date +%Y%m%d-%H%M%S)"
 
 log()  { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
