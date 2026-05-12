@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "defaultMode": "dontAsk"
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bash \"$HOME/.claude/statusline.sh\""
+  },
+  "enabledPlugins": {},
+  "extraKnownMarketplaces": {},
+  "outputStyle": "verbose",
+  "effortLevel": "xhigh",
+  "autoUpdatesChannel": "latest",
+  "skipDangerousModePermissionPrompt": true,
+  "verbose": true,
+  "voiceEnabled": true,
+  "allowedTools": [],
+  "autoMemoryEnabled": false
+}
