@@ -63,6 +63,38 @@ ITERM_DYN_DIR="$HOME/Library/Application Support/iTerm2/DynamicProfiles"
 log "Installing iTerm2 Dynamic Profile into $ITERM_DYN_DIR"
 backup_and_install "$REPO_DIR/iterm/Default.json" "$ITERM_DYN_DIR/Default.json"
 
+# Merge curated top-level iTerm prefs into ~/Library/Preferences/com.googlecode.iterm2.plist.
+# Existing keys not in app-prefs.json are preserved; listed keys are overwritten.
+ITERM_PLIST="$HOME/Library/Preferences/com.googlecode.iterm2.plist"
+APP_PREFS="$REPO_DIR/iterm/app-prefs.json"
+if [[ -f "$APP_PREFS" ]]; then
+    log "Merging iTerm app-level preferences into $ITERM_PLIST"
+    if [[ -f "$ITERM_PLIST" ]]; then
+        cp "$ITERM_PLIST" "${ITERM_PLIST}.bak-${TS}"
+        warn "backed up existing $ITERM_PLIST -> ${ITERM_PLIST}.bak-${TS}"
+    fi
+    python3 - "$APP_PREFS" "$ITERM_PLIST" <<'PYEOF'
+import json, plistlib, sys, os
+prefs_json, plist_path = sys.argv[1], sys.argv[2]
+with open(prefs_json) as f:
+    updates = json.load(f)
+existing = {}
+if os.path.exists(plist_path):
+    with open(plist_path, 'rb') as f:
+        existing = plistlib.load(f)
+for k, v in updates.items():
+    existing[k] = v
+os.makedirs(os.path.dirname(plist_path), exist_ok=True)
+with open(plist_path, 'wb') as f:
+    plistlib.dump(existing, f, fmt=plistlib.FMT_BINARY)
+print(f"  merged {len(updates)} keys")
+PYEOF
+    # Invalidate cfprefsd cache so iTerm sees the new values on next read.
+    # Brief, harmless: cfprefsd respawns automatically.
+    killall -u "$USER" cfprefsd 2>/dev/null || true
+    ok "applied app-level preferences"
+fi
+
 cat <<'EOF'
 
 Done.
@@ -71,5 +103,7 @@ iTerm2 will pick up the Dynamic Profile automatically (named "Synced").
 To make it the default profile:
   iTerm2 → Settings → Profiles → select "Synced" → Other Actions → Set as Default.
 
-If iTerm2 was already running, it reloads dynamic profiles on file change — no restart needed.
+App-level preferences (tab bar, pointer actions, etc.) were merged into the plist.
+Already-open iTerm windows keep their old settings; new windows / a relaunch will
+pick up the merged values.
 EOF

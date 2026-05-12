@@ -1,0 +1,29 @@
+{
+  "HapticFeedbackForEsc": false,
+  "SoundForEsc": false,
+  "VisualIndicatorForEsc": false,
+  "HideTab": false,
+  "LeftTabBarWidth": 149.0,
+  "PointerActions": {
+    "Button,1,1,,": {
+      "Action": "kContextMenuPointerAction"
+    },
+    "Button,2,1,,": {
+      "Action": "kPasteFromClipboardPointerAction"
+    },
+    "Gesture,ThreeFingerSwipeDown,,": {
+      "Action": "kPrevWindowPointerAction"
+    },
+    "Gesture,ThreeFingerSwipeLeft,,": {
+      "Action": "kPrevTabPointerAction"
+    },
+    "Gesture,ThreeFingerSwipeRight,,": {
+      "Action": "kNextTabPointerAction"
+    },
+    "Gesture,ThreeFingerSwipeUp,,": {
+      "Action": "kNextWindowPointerAction"
+    }
+  },
+  "TabViewType": 2,
+  "findMode_iTerm": 0
+}
