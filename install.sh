@@ -154,10 +154,20 @@ if [[ -f "$REPO_DIR/cmux/cmux.json" ]]; then
 fi
 
 # --- Ghostty ---------------------------------------------------------------
+#
+# Ghostty on macOS reads from BOTH paths and merges them, with the macOS path
+# winning on conflicts:
+#   1. ~/.config/ghostty/config                                   (XDG, read first)
+#   2. ~/Library/Application Support/com.mitchellh.ghostty/config (macOS, overrides)
+# cmux's bundled Ghostty + the standalone Ghostty.app both write to path #2,
+# so if we only symlink #1, anything they write silently overrides our repo
+# values. Symlink BOTH paths to the same repo file so there's one source of
+# truth and UI-driven writes flow back into git.
 
 if [[ -f "$REPO_DIR/ghostty/config" ]]; then
-    log "Linking Ghostty config into ~/.config/ghostty/"
+    log "Linking Ghostty config into ~/.config/ghostty/ and macOS Application Support"
     link "$REPO_DIR/ghostty/config" "$HOME/.config/ghostty/config"
+    link "$REPO_DIR/ghostty/config" "$HOME/Library/Application Support/com.mitchellh.ghostty/config"
 fi
 
 cat <<EOF
