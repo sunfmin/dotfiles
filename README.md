@@ -1,57 +1,79 @@
 # dotfiles
 
-Personal macOS dotfiles — Claude Code, iTerm2, cmux, Ghostty — synced across machines.
+Personal macOS setup — Claude Code, iTerm2, cmux, Ghostty — including the
+software and the configs, synced across machines.
 
-## Contents
+## What it does
 
-| Path | Installed to |
-| --- | --- |
-| `claude/settings.json` | `~/.claude/settings.json` |
-| `claude/statusline.sh` | `~/.claude/statusline.sh` |
-| `iterm/Default.json` | merged into the **Default** profile inside `~/Library/Preferences/com.googlecode.iterm2.plist` (matched by Guid) |
-| `iterm/app-prefs.json` | merged into `~/Library/Preferences/com.googlecode.iterm2.plist` |
-| `cmux/cmux.json` | `~/.config/cmux/cmux.json` |
-| `ghostty/config` | `~/.config/ghostty/config` |
+The installer (`install.sh`) sets up a fresh Mac in one shot:
 
-The iTerm profile is installed directly into the plist — the existing Default profile (matched by Guid `DC718448-DCA9-4DE4-9CDC-989D58A849A4`) is replaced in place, so no extra profile appears in the picker.
+1. **Installs Homebrew** if missing.
+2. **`brew bundle`** from the included `Brewfile` — iTerm2, Ghostty, cmux,
+   node, jq, git.
+3. **Installs Claude Code CLI** (`npm i -g @anthropic-ai/claude-code`).
+4. **Symlinks file-based configs** from this repo into their live locations
+   (see the table below). Editing the live file *is* editing the repo file.
+5. **Merges iTerm settings** into the iTerm plist — the iTerm profile and
+   app-level prefs can't be symlinks because the plist holds other state
+   too, so the installer rewrites just the **Default** profile (matched by
+   its stable Guid `DC718448-DCA9-4DE4-9CDC-989D58A849A4`) plus a curated
+   set of app-level keys.
 
-`app-prefs.json` carries top-level iTerm preferences that aren't part of a profile (tab bar width / position, pointer & gesture actions, ESC indicator settings, etc.). The installer merges them into the plist, then nudges `cfprefsd` so new iTerm windows pick them up.
+| Path in repo | Installed as | Mechanism |
+| --- | --- | --- |
+| `claude/settings.json` | `~/.claude/settings.json` | symlink |
+| `claude/statusline.sh` | `~/.claude/statusline.sh` | symlink |
+| `cmux/cmux.json` | `~/.config/cmux/cmux.json` | symlink |
+| `ghostty/config` | `~/.config/ghostty/config` | symlink |
+| `iterm/Default.json` | Default profile inside `~/Library/Preferences/com.googlecode.iterm2.plist` | plist merge by Guid |
+| `iterm/app-prefs.json` | top-level keys in the same plist | plist merge |
+| `Brewfile` | (just read by `brew bundle`) | — |
 
-## Install
-
-One-liner — the script self-bootstraps by cloning the repo into `/tmp` and re-running itself:
+## Install (new machine)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/sunfmin/dotfiles/main/install.sh | bash
 ```
 
-Or from a local clone:
+The script bootstraps by cloning the repo into `~/dotfiles` (the symlinks
+need a stable location), then re-runs itself from there.
+
+Or from an existing clone anywhere:
 
 ```bash
-git clone https://github.com/sunfmin/dotfiles.git
-cd dotfiles && ./install.sh
+git clone https://github.com/sunfmin/dotfiles.git ~/dotfiles
+cd ~/dotfiles && ./install.sh
 ```
 
-Existing files are backed up to `<file>.bak-<timestamp>` before being overwritten — nothing is lost.
+> Re-running is safe. `brew bundle` skips already-installed software,
+> `ln -sfn` overwrites old symlinks, and the iTerm plist merge only touches
+> the keys we manage.
+>
+> Already-open iTerm windows keep their old settings until relaunch.
 
-Already-open iTerm windows keep their old settings; relaunch (or open a new window) to pick up the merged values.
+## Updating
 
-## Updating the repo from the current machine
-
-After tweaking settings locally, re-export and commit:
+Because file-based configs are symlinks, just edit the live file (e.g.
+change `font-size` in Ghostty's settings UI, or hand-edit
+`~/.config/ghostty/config`) — you're editing the repo. Then:
 
 ```bash
-# Claude
-cp ~/.claude/settings.json  claude/settings.json
-cp ~/.claude/statusline.sh  claude/statusline.sh
+cd ~/dotfiles && git add -A && git commit -m "sync from $(hostname -s)" && git push
+```
 
-# iTerm — re-export the Default profile (matched by its stable Guid)
+iTerm is the only thing that needs re-exporting, since its config isn't a
+symlinkable file:
+
+```bash
+cd ~/dotfiles
+
+# Re-export the Default profile (matched by its stable Guid)
 /usr/libexec/PlistBuddy -x -c 'Print :"New Bookmarks":0' \
     ~/Library/Preferences/com.googlecode.iterm2.plist > /tmp/iterm.plist
 plutil -convert json -o /tmp/iterm.json /tmp/iterm.plist
 jq '{Profiles: [.]}' /tmp/iterm.json > iterm/Default.json
 
-# iTerm app-level prefs — re-export the curated key subset
+# Re-export the curated app-level key subset
 python3 - <<'PY' > iterm/app-prefs.json
 import plistlib, json, os
 keys = ['HapticFeedbackForEsc','SoundForEsc','VisualIndicatorForEsc',
@@ -61,9 +83,11 @@ with open(os.path.expanduser('~/Library/Preferences/com.googlecode.iterm2.plist'
 print(json.dumps({k: d[k] for k in keys if k in d}, indent=2, default=str))
 PY
 
-# cmux + Ghostty
-cp ~/.config/cmux/cmux.json    cmux/cmux.json
-cp ~/.config/ghostty/config    ghostty/config
+git add -A && git commit -m "iterm sync from $(hostname -s)" && git push
+```
 
-git add -A && git commit -m "sync settings from $(hostname -s)" && git push
+To capture additional Homebrew-installed apps into the Brewfile later:
+
+```bash
+brew bundle dump --file=Brewfile --force   # overwrites with current state
 ```

@@ -1,15 +1,25 @@
 #!/usr/bin/env bash
-# Install personal dotfiles: Claude Code, iTerm2, cmux, Ghostty.
-# Existing files are backed up to <file>.bak-<timestamp> before being overwritten.
+# Install personal dotfiles + the software they configure.
+#
+# Software: installed via Homebrew (Brewfile) — iTerm2, Ghostty, cmux, node, jq, git.
+# Claude Code CLI: installed via npm (`@anthropic-ai/claude-code`).
+#
+# Config: file-based configs (claude, cmux, ghostty) are installed as symlinks
+# pointing back into the repo, so editing the live file *is* editing the repo.
+# Any existing file at the target is removed without backup.
+#
+# iTerm's profile + app-prefs are NOT symlinks — they're merged into the iTerm
+# plist directly, since the plist isn't a file we own.
 #
 # Usage:
-#   ./install.sh                       # from a local clone
+#   ./install.sh                       # from a local clone (anywhere)
 #   curl -fsSL https://raw.githubusercontent.com/sunfmin/dotfiles/main/install.sh | bash
-#                                      # self-bootstraps: clones the repo to /tmp and reruns
+#                                      # self-bootstraps by cloning to ~/dotfiles
 
 set -euo pipefail
 
 REPO_URL="https://github.com/sunfmin/dotfiles.git"
+DEFAULT_CLONE="$HOME/dotfiles"
 
 # Resolve where this script lives. When piped from curl, BASH_SOURCE[0] is empty
 # or unreliable, so we treat that as "not a local clone" and bootstrap.
@@ -21,10 +31,14 @@ else
 fi
 
 if [[ -z "$REPO_DIR" || ! -f "$REPO_DIR/claude/settings.json" ]]; then
-    TMP_DIR="/tmp/dotfiles-$(date +%Y%m%d-%H%M%S)"
-    printf '\033[1;34m==>\033[0m Bootstrapping: cloning %s into %s\n' "$REPO_URL" "$TMP_DIR"
-    git clone --depth=1 "$REPO_URL" "$TMP_DIR"
-    exec bash "$TMP_DIR/install.sh"
+    # Symlinks need a stable repo location — bootstrap into ~/dotfiles, not /tmp.
+    if [[ -e "$DEFAULT_CLONE" ]]; then
+        echo "error: $DEFAULT_CLONE already exists; cd into it and run ./install.sh manually" >&2
+        exit 1
+    fi
+    printf '\033[1;34m==>\033[0m Bootstrapping: cloning %s into %s\n' "$REPO_URL" "$DEFAULT_CLONE"
+    git clone "$REPO_URL" "$DEFAULT_CLONE"
+    exec bash "$DEFAULT_CLONE/install.sh"
 fi
 
 TS="$(date +%Y%m%d-%H%M%S)"
@@ -33,28 +47,41 @@ log()  { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m!!\033[0m %s\n' "$*" >&2; }
 ok()   { printf '\033[1;32m ✓\033[0m %s\n' "$*"; }
 
-backup_and_install() {
+link() {
     local src="$1" dst="$2"
-    local dst_dir
-    dst_dir="$(dirname "$dst")"
-    mkdir -p "$dst_dir"
-
-    if [[ -e "$dst" || -L "$dst" ]]; then
-        local bak="${dst}.bak-${TS}"
-        mv "$dst" "$bak"
-        warn "backed up existing $dst -> $bak"
-    fi
-
-    cp "$src" "$dst"
-    ok "installed $dst"
+    mkdir -p "$(dirname "$dst")"
+    ln -sfn "$src" "$dst"
+    ok "linked $dst -> $src"
 }
 
-# --- Claude ----------------------------------------------------------------
+# --- Homebrew + Brewfile ---------------------------------------------------
 
-log "Installing Claude settings into ~/.claude/"
-backup_and_install "$REPO_DIR/claude/settings.json" "$HOME/.claude/settings.json"
-backup_and_install "$REPO_DIR/claude/statusline.sh" "$HOME/.claude/statusline.sh"
-chmod +x "$HOME/.claude/statusline.sh"
+if ! command -v brew >/dev/null 2>&1; then
+    log "Homebrew not found — installing"
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    # Add brew to PATH for the rest of this script (Apple Silicon default).
+    if [[ -x /opt/homebrew/bin/brew ]]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    elif [[ -x /usr/local/bin/brew ]]; then
+        eval "$(/usr/local/bin/brew shellenv)"
+    fi
+fi
+
+log "Installing software via Brewfile"
+brew bundle --file="$REPO_DIR/Brewfile"
+ok "brew bundle done"
+
+# --- Claude Code CLI -------------------------------------------------------
+
+if ! command -v claude >/dev/null 2>&1; then
+    log "Installing Claude Code CLI via npm"
+    npm install -g @anthropic-ai/claude-code
+fi
+
+log "Linking Claude settings into ~/.claude/"
+link "$REPO_DIR/claude/settings.json" "$HOME/.claude/settings.json"
+link "$REPO_DIR/claude/statusline.sh" "$HOME/.claude/statusline.sh"
+chmod +x "$REPO_DIR/claude/statusline.sh"
 
 # --- iTerm2 ----------------------------------------------------------------
 
@@ -67,11 +94,11 @@ APP_PREFS="$REPO_DIR/iterm/app-prefs.json"
 # profile that shares the same Guid. The non-dynamic profile in the plist is
 # now the single source of truth on the machine.
 ITERM_DYN_DIR="$HOME/Library/Application Support/iTerm2/DynamicProfiles"
-if [[ -f "$ITERM_DYN_DIR/Default.json" ]]; then
-    mv "$ITERM_DYN_DIR/Default.json" "$ITERM_DYN_DIR/Default.json.bak-${TS}"
-    warn "removed legacy Dynamic Profile $ITERM_DYN_DIR/Default.json (backed up)"
-fi
+rm -f "$ITERM_DYN_DIR/Default.json"
 
+# The iTerm plist holds settings that aren't in this repo (window arrangements,
+# command history, other profiles…), so we DO back it up before the merge —
+# unlike the symlinked configs whose content is in git already.
 if [[ -f "$ITERM_PLIST" ]]; then
     cp "$ITERM_PLIST" "${ITERM_PLIST}.bak-${TS}"
     warn "backed up existing $ITERM_PLIST -> ${ITERM_PLIST}.bak-${TS}"
@@ -122,24 +149,27 @@ ok "applied iTerm profile + app-level preferences"
 # --- cmux ------------------------------------------------------------------
 
 if [[ -f "$REPO_DIR/cmux/cmux.json" ]]; then
-    log "Installing cmux config into ~/.config/cmux/"
-    backup_and_install "$REPO_DIR/cmux/cmux.json" "$HOME/.config/cmux/cmux.json"
+    log "Linking cmux config into ~/.config/cmux/"
+    link "$REPO_DIR/cmux/cmux.json" "$HOME/.config/cmux/cmux.json"
 fi
 
 # --- Ghostty ---------------------------------------------------------------
 
 if [[ -f "$REPO_DIR/ghostty/config" ]]; then
-    log "Installing Ghostty config into ~/.config/ghostty/"
-    backup_and_install "$REPO_DIR/ghostty/config" "$HOME/.config/ghostty/config"
+    log "Linking Ghostty config into ~/.config/ghostty/"
+    link "$REPO_DIR/ghostty/config" "$HOME/.config/ghostty/config"
 fi
 
-cat <<'EOF'
+cat <<EOF
 
 Done.
 
-The Default profile in iTerm has been updated in place.
-Already-open iTerm windows keep their old settings; new windows / a relaunch
-will pick up the merged values.
+Software (iTerm2, Ghostty, cmux, node, etc.) installed via Brewfile.
+Claude Code CLI installed via npm.
 
-cmux + Ghostty pick up their configs on next launch (or new terminal tab).
+Claude / cmux / Ghostty configs are now symlinks into $REPO_DIR —
+edit them in either place and the change is the same. Commit + push when ready.
+
+The Default profile in iTerm has been merged into the plist (not a symlink);
+relaunch iTerm to pick up the new values.
 EOF

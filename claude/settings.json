@@ -1,19 +1,28 @@
 {
-  "permissions": {
-    "defaultMode": "dontAsk"
+  "allowedTools" : [
+
+  ],
+  "autoMemoryEnabled" : false,
+  "autoUpdatesChannel" : "latest",
+  "effortLevel" : "xhigh",
+  "enabledPlugins" : {
+
   },
-  "statusLine": {
-    "type": "command",
-    "command": "bash \"$HOME/.claude/statusline.sh\""
+  "extraKnownMarketplaces" : {
+
   },
-  "enabledPlugins": {},
-  "extraKnownMarketplaces": {},
-  "outputStyle": "verbose",
-  "effortLevel": "xhigh",
-  "autoUpdatesChannel": "latest",
-  "skipDangerousModePermissionPrompt": true,
-  "verbose": true,
-  "voiceEnabled": true,
-  "allowedTools": [],
-  "autoMemoryEnabled": false
+  "hooks" : {
+
+  },
+  "outputStyle" : "verbose",
+  "permissions" : {
+    "defaultMode" : "dontAsk"
+  },
+  "skipDangerousModePermissionPrompt" : true,
+  "statusLine" : {
+    "command" : "bash \"$HOME\/.claude\/statusline.sh\"",
+    "type" : "command"
+  },
+  "verbose" : true,
+  "voiceEnabled" : true
 }
