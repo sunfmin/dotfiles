@@ -1,28 +1,48 @@
 {
-  "allowedTools" : [
-
-  ],
-  "autoMemoryEnabled" : false,
-  "autoUpdatesChannel" : "latest",
-  "effortLevel" : "xhigh",
-  "enabledPlugins" : {
-
+  "env": {
+    "CLAUDE_CODE_DISABLE_FEEDBACK_SURVEY": "1"
   },
-  "extraKnownMarketplaces" : {
-
+  "permissions": {
+    "allow": [
+      "mcp__codegraph__codegraph_explore",
+      "mcp__codegraph__codegraph_search",
+      "mcp__codegraph__codegraph_node",
+      "mcp__codegraph__codegraph_callers",
+      "mcp__codegraph__codegraph_callees",
+      "mcp__codegraph__codegraph_impact",
+      "mcp__codegraph__codegraph_files",
+      "mcp__codegraph__codegraph_status"
+    ],
+    "defaultMode": "dontAsk"
   },
-  "hooks" : {
-
+  "statusLine": {
+    "type": "command",
+    "command": "bash \"$HOME/.claude/statusline.sh\""
   },
-  "outputStyle" : "verbose",
-  "permissions" : {
-    "defaultMode" : "dontAsk"
-  },
-  "skipDangerousModePermissionPrompt" : true,
-  "statusLine" : {
-    "command" : "bash \"$HOME\/.claude\/statusline.sh\"",
-    "type" : "command"
-  },
-  "verbose" : true,
-  "voiceEnabled" : true
+  "enabledPlugins": {},
+  "extraKnownMarketplaces": {},
+  "outputStyle": "verbose",
+  "effortLevel": "xhigh",
+  "autoUpdatesChannel": "latest",
+  "autoMemoryEnabled": false,
+  "skipDangerousModePermissionPrompt": true,
+  "verbose": true,
+  "preferredNotifChannel": "auto",
+  "inputNeededNotifEnabled": true,
+  "agentPushNotifEnabled": true,
+  "voiceEnabled": true,
+  "allowedTools": [],
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cmd=$(jq -r '.tool_input.command // empty'); if printf '%s' \"$cmd\" | grep -qE '(^|[|&;({])[[:space:]]*(grep|egrep|fgrep)([[:space:]]|$)'; then printf '%s' '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"Use ripgrep (rg) instead of grep/egrep/fgrep: faster and respects .gitignore. Search files via the built-in Grep tool; filter output by piping into rg. (Only grep in command position is blocked; pgrep, zgrep, git grep, sudo grep are unaffected.)\"}}'; fi"
+          }
+        ]
+      }
+    ]
+  }
 }
