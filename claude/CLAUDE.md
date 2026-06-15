@@ -43,3 +43,9 @@ Change my skill:
 
 `source` not under `sunfmin/` (mattpocock/skills, anthropics/skills,
 mvanhorn/cli-printing-press) = third-party, not mine. No edit+push. Surface instead.
+
+## rg, not grep
+
+Search files -> built-in Grep tool (rg under the hood). Filter output -> pipe to `rg`.
+Never shell out to `grep`/`egrep`/`fgrep` -> a global PreToolUse hook denies them.
+`pgrep`, `zgrep`, `git grep` still ok.
