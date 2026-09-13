@@ -125,3 +125,30 @@ Never shell out to `grep`/`egrep`/`fgrep` -> a global PreToolUse hook denies the
 - 任何 `--force` / `--force-with-lease` 也要我明确说。
 - 当前就在主干分支上 -> 先开一条新 branch 再 commit + push，别直接推主干。
 - Message 简洁，描述这一步做了啥；保留 `Co-Authored-By` trailer。
+
+## 新任务 -> 先判断要不要开新 worktree（Orca）
+
+接到一个**要动代码**的新任务，动手前先过这三问：
+
+1. 这是改代码的活儿吗？问答 / 调研 / 只读 / 改我的配置 -> **不开**，就地做。
+2. 跟当前 worktree 正在做的是同一件事吗？是（修它、续它、补测试、改它的文档）-> **不开**，就地做。
+3. 当前分支已开 PR / 在 review，或工作区的脏改动跟新任务无关 -> **开**。
+
+要开就**派出去**，别自己搬：
+
+```
+orca worktree create --name <任务名> --agent claude --prompt "<原任务原样转述>" \
+  --base-branch <base> --json
+```
+
+- **base 怎么定**：`git symbolic-ref refs/remotes/origin/HEAD`（gaokaowiki 上 = `origin/staging`）。
+  绝不拿当前 feature 分支当 base，除非我明说「从当前分支切」/ 要 stacked。
+- **lineage**：跟当前活儿相关 -> 默认继承 parent（或 `--parent-worktree active`）；完全无关 -> `--no-parent`。
+- `--name` 用任务本身起名，别用随机词。
+- 建完回我一行：worktree 名 + 路径 + 分支 + base，然后**这边收工**，别在旧 worktree 里把同一件事再做一遍。
+
+禁止项：
+
+- 别用 Claude Code 自带的 `EnterWorktree` 新建 -> 它建在 `.claude/worktrees/`，Orca 不认，卡片里看不见。Orca 环境一律 `orca worktree create`。
+- 不在 Orca 里（没 `orca`、或 `orca status` 不通）-> 整条跳过，按 auto commit & push 那条走（当前在主干就先开分支）。
+- 拿不准算不算「换任务」-> 问我一句，别默默开。
