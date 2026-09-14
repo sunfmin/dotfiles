@@ -141,7 +141,7 @@ orca worktree create --name <任务名> --agent claude --prompt "<原任务原�
   --base-branch <base> --json
 ```
 
-- **base 怎么定**：`git symbolic-ref refs/remotes/origin/HEAD`（gaokaowiki 上 = `origin/staging`）。
+- **base 怎么定**：一律**现取** `git symbolic-ref refs/remotes/origin/HEAD`，别背常量（默认分支会改名，背下来的那个迟早过期）。
   绝不拿当前 feature 分支当 base，除非我明说「从当前分支切」/ 要 stacked。
 - **lineage**：跟当前活儿相关 -> 默认继承 parent（或 `--parent-worktree active`）；完全无关 -> `--no-parent`。
 - `--name` 用任务本身起名，别用随机词。
