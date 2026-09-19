@@ -121,7 +121,8 @@ Never shell out to `grep`/`egrep`/`fgrep` -> a global PreToolUse hook denies the
 - Git repo only. 非 repo -> skip.
 - 每个有意义的阶段 = 一个 commit：一个 feature、一个 fix、一段测试跑通、一步 refactor。别把整个 session 攒成一个大 commit。
 - **Push 只推自己这条工作分支**：`git push -u origin <当前分支>`（第一次带 `-u` 建 upstream）。
-- **绝不主动动主干分支**（`main` / `master` / `staging` / `develop` 之类）：不往主干 push、不 merge 进主干、不 rebase 主干、不开 PR。要进主干必须我明确说。
+- **绝不主动动主干分支**（`main` / `master` / `staging` / `develop` 之类）：不往主干 push、不 merge 进主干、不 rebase 主干。要进主干必须我明确说。
+- **任务做完 -> 自动开 PR**：工作分支 push 完、任务阶段性完成（测试跑过）-> `gh pr create` 到默认分支（`git symbolic-ref refs/remotes/origin/HEAD` 现取，别背常量），不用等我开口。PR 只开、不 merge、不 approve、不打 auto-merge；已有 PR 的分支 -> 不重复开，push 即更新。Body 写清做了啥、怎么验证的、哪些没验证；Closes #n 关联对应 issue。
 - 任何 `--force` / `--force-with-lease` 也要我明确说。
 - 当前就在主干分支上 -> 先开一条新 branch 再 commit + push，别直接推主干。
 - Message 简洁，描述这一步做了啥；保留 `Co-Authored-By` trailer。
