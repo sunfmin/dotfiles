@@ -124,13 +124,5 @@ Never shell out to `grep`/`egrep`/`fgrep` -> a global PreToolUse hook denies the
 - **绝不主动动主干分支**（`main` / `master` / `staging` / `develop` 之类）：不往主干 push、不 merge 进主干、不 rebase 主干。要进主干必须我明确说。
 - **任务做完 -> 自动开 PR**：工作分支 push 完、任务阶段性完成（测试跑过）-> `gh pr create` 到默认分支（`git symbolic-ref refs/remotes/origin/HEAD` 现取，别背常量），不用等我开口。PR 只开、不 merge、不 approve、不打 auto-merge；已有 PR 的分支 -> 不重复开，push 即更新。Body 写清做了啥、怎么验证的、哪些没验证；Closes #n 关联对应 issue。
 - 任何 `--force` / `--force-with-lease` 也要我明确说。
-- 当前就在主干分支上 -> 先过 `worktree-gate`；它判「就地做」，才在这开一条新 branch 再 commit + push。
+- 当前就在主干分支上 -> 先开一条新 branch 再 commit + push，别直接推主干。
 - Message 简洁，描述这一步做了啥；保留 `Co-Authored-By` trailer。
-
-## 改代码前 -> 先过 worktree-gate
-
-要动 git repo 里的代码（feature / fix / refactor）-> **第一次 Edit / 开分支之前**，先加载 `worktree-gate` skill，按它的 verdict 走：就地做，还是派到新的 Orca worktree 交给新 agent。
-
-问答 / 调研 / 只读 / 改我的配置 -> 直接就地做，不过 gate。
-
-skill 列表里没有它 -> `npx skills add sunfmin/worktree-gate -g -y` 装上再过。
