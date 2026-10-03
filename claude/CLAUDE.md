@@ -1,23 +1,17 @@
 # Global Claude config
 
-## 时间意识（贯穿所有任务）
+## 时间意识
 
-做任何事之前先问一句：**这事本来该花多久？** 然后按那个量级去做。用户等的每一秒都是成本，快 = 好体验。
+用户等的每一秒都是成本。做之前先估这事该花多久；实际明显超出 → 停下来换路子，别闷头硬等。
 
-- **先估，再做**：这一步是 1 秒、10 秒还是 5 分钟的事？实际明显超出预期 → 停下来换路子，别闷头硬等。
-- **小事必须快**：读一个已知文件、改一行、答一个已经知道的事实 → 直接做。别为此 spawn subagent、别开 workflow、别全仓库大搜。工具选最短路径（知道文件就 Read，别 Explore）。
-- **能并行就并行**：互相不依赖的工具调用放同一个 block 一起发，别一个个串着等。
-- **长活儿放后台**：build / test / 下载 / 跑模型这类，用 `run_in_background` + 合理 timeout，别把会话卡死在前台。
-- **测量，别猜**：怀疑慢就计时（`time`、`--verbose`、打点），报告里给**实测秒数**，不要写「应该很快」「大概几分钟」。优化前后都要有数。
-- **超过 ~30s 的事先打个招呼**：一句话说清在干嘛、大概多久；中间有阶段性结果就先给出来，别攒到最后一次性倒。
-- **等待要有上限**：轮询 / 等状态设死上限，超了就报告当前状况，不要无限等下去。
-- **别把快的做慢**：一次调用能解决的不拆成五步；缓存里已经有的不重下、不重算。
+- **小事直接做**：读已知文件、改一行、答已知事实 → 别 spawn subagent、别开 workflow、别全仓库大搜。
+- **测量，别猜**：报告里给**实测秒数**，不写「应该很快」「大概几分钟」；优化前后都要有数。
+- **超过 ~30s 先打招呼**：一句话说清在干嘛、大概多久；有阶段性结果先给出来。
+- **等待要有上限**：轮询 / 等状态设死上限，超了就报告当前状况。
 
 ## sudo
 
-No tty here. Plain `sudo` fail. Use sudoplz askpass.
-
-Prefix every sudo cmd:
+No tty here. Plain `sudo` fail -> prefix every sudo cmd:
 
 ```
 SUDO_ASKPASS=$HOME/.local/bin/askpass sudo -A <cmd>
@@ -25,104 +19,41 @@ SUDO_ASKPASS=$HOME/.local/bin/askpass sudo -A <cmd>
 
 GUI dialog pop -> user approve per cmd. Deny -> cmd fail, retry not allowed.
 
-Setup (once, user terminal):
-
-```
-brew install age
-uv tool install sudoplz
-sudoplz set
-```
-
-Needs: `uv`, `age`, ed25519 key at `~/.ssh/id_ed25519`.
-
 ## skills
 
-Installed via `npx skills`. Copies at `~/.agents/skills/<name>/` (symlinked into
-`~/.claude/skills/`). **Never edit there** -> `npx skills update` overwrites from
-source repo, edits lost.
+Installed via `npx skills` into `~/.agents/skills/<name>/` (symlinked into
+`~/.claude/skills/`). **Never edit there** -> `npx skills update` overwrites.
 
-Source of truth: `~/.agents/.skill-lock.json`. Each entry has `source`
-(e.g. `sunfmin/whats-hot`) + `skillPath`. `source` under `sunfmin/` = mine.
-
-Mine live at `~/Developments/<repo>`, `<repo>` = `source` after `sunfmin/`
-(`sunfmin/whats-hot` -> `~/Developments/whats-hot`). Git remote = same repo on GitHub.
-
-Change my skill:
-
-1. Lockfile -> get `source` + `skillPath`.
-2. Edit `~/Developments/<repo>` (file at `skillPath`, e.g. `SKILL.md`).
-3. `git commit` + `git push`.
-4. `npx skills update` -> pulls into `~/.agents/skills/`.
-
-`source` not under `sunfmin/` (mattpocock/skills, anthropics/skills,
-mvanhorn/cli-printing-press) = third-party, not mine. No edit+push. Surface instead.
-
-## dreamina credits
-
-Every `dreamina` generation call (text2image, image2image, text2video, image2video,
-frames2video, multiframe2video, multimodal2video, image_upscale ...) -> after it
-returns, report credit spend as a per-step line:
-
-```
-第N步 <cmd>: 消耗 <credit_count> credits, 余额 <total_credit>
-```
-
-`credit_count` -> from the task result JSON. Balance -> `dreamina user_credit`
-(`total_credit`). Multiple calls in a turn -> one line each, plus a total-consumed
-summary at the end.
-
-## dreamina video queue (vip = 快队列)
-
-Dreamina video gen has TWO queues, gated by model tier:
-
-- `_vip` models (`seedance2.0_vip`, `seedance2.0fast_vip`) -> **快队列 / priority**:
-  reach `queue_status: Generating` in ~1-2 min, finish in a few min.
-- non-vip models (`seedance2.0`, `seedance2.0fast`, `seedance2.0mini`) -> **慢队列 / free**:
-  can sit at `queue_status: Queueing` for 30-40+ min, sometimes effectively stuck.
-
-Rule: any video that must land promptly -> ALWAYS use a `_vip` model. Non-vip only for
-"don't care when it finishes". `_vip` also costs more and is the only tier reaching 1080p/4K.
-There is NO CLI cancel -> a slow-queue task, once submitted, can't be aborted (only ignored).
+- Source of truth: `~/.agents/.skill-lock.json` -> `source` + `skillPath` per skill.
+- `source` under `sunfmin/` = mine, repo at `~/Developments/<repo>`
+  (`sunfmin/whats-hot` -> `~/Developments/whats-hot`).
+- Change mine: edit the file at `skillPath` in that repo -> `git commit` + `git push`
+  -> `npx skills update`.
+- Any other `source` = third-party. No edit+push. Surface instead.
 
 ## rg, not grep
 
-Search files -> built-in Grep tool (rg under the hood). Filter output -> pipe to `rg`.
-Never shell out to `grep`/`egrep`/`fgrep` -> a global PreToolUse hook denies them.
-`pgrep`, `zgrep`, `git grep` still ok.
+Never shell out to `grep`/`egrep`/`fgrep` (a PreToolUse hook denies them) -> Grep tool,
+or pipe to `rg`. `pgrep`, `zgrep`, `git grep` still ok.
 
 ## python 一律用 uv
 
-跑任何 Python 都走 `uv`，别直接用系统/homebrew 的 `python3`、`pip`、`venv`。
-
-- 单文件脚本 -> `uv run script.py`。要依赖就写 PEP 723 inline metadata（文件头 `# /// script` 块里列 `dependencies`），`uv run` 自己装，不用先建环境。
-- 一次性跑某个包的命令 -> `uvx <tool>`。
-- 装常驻 CLI 工具 -> `uv tool install <pkg>`。
-- 项目内 -> `uv sync` + `uv run <cmd>`；加依赖用 `uv add`，**不要** `pip install`。
-- 要指定版本 -> `uv run --python 3.12 ...`，别手动装 python。
-- 临时验证一行代码也一样：`uv run --with <pkg> python -c '...'`，别 `python3 -c`。
-
-理由：系统 python 的包不全（连 `import packaging` 都可能炸）、`pip install` 会污染 homebrew
-的 site-packages、手管 venv 容易漂。uv 每次都从锁定依赖起一个干净环境。
+跑任何 Python 都走 `uv`（`uv run` / `uvx` / `uv add`），别用系统 `python3`、`pip`、手管 venv。
+一行验证也一样：`uv run --with <pkg> python -c '...'`。细则见 `mypython` skill。
 
 ## 大文件下载
 
-下大文件（模型权重、数据集、release、tarball/zip、ISO、镜像、视频……）前，**先搜确认本地有没有**：
-
-- 查 `~/.cache/huggingface`、`~/.cache/modelscope`、aria2/下载目标目录、已有产物、venv/工具自带缓存等。
-- 已有 -> 直接用，**别重复下**。
-- 确实缺、真需要下 -> **先和我确认**，得到同意再下。别擅自 `hf download` / `wget` / `curl -O` / aria2 / 工具首次运行触发的隐式拉取就把几个 G 拉下来。
-
-不确定「会不会触发下载」也先说一声，别默默开下。
+下大文件（模型权重、数据集、release、镜像、视频……）前先查本地有没有（`~/.cache/huggingface`、
+`~/.cache/modelscope`、下载目录、工具自带缓存），有就直接用。确实要下 -> **先和我确认**，
+工具首次运行触发的隐式拉取也算。
 
 ## auto commit & push
 
-阶段性任务完成 -> 自动 `git commit` + `git push` 到当前这条工作分支，不用等我开口。这条覆盖默认的「只有我要求才 commit / push」。
+阶段性任务完成 -> 自动 `git commit` + `git push` 到当前工作分支，不用等我开口（覆盖默认的
+「要求了才 commit / push」）。非 git repo -> skip。
 
-- Git repo only. 非 repo -> skip.
-- 每个有意义的阶段 = 一个 commit：一个 feature、一个 fix、一段测试跑通、一步 refactor。别把整个 session 攒成一个大 commit。
-- **Push 只推自己这条工作分支**：`git push -u origin <当前分支>`（第一次带 `-u` 建 upstream）。
-- **绝不主动动主干分支**（`main` / `master` / `staging` / `develop` 之类）：不往主干 push、不 merge 进主干、不 rebase 主干。要进主干必须我明确说。
-- **任务做完 -> 自动开 PR**：工作分支 push 完、任务阶段性完成（测试跑过）-> `gh pr create` 到默认分支（`git symbolic-ref refs/remotes/origin/HEAD` 现取，别背常量），不用等我开口。PR 只开、不 merge、不 approve、不打 auto-merge；已有 PR 的分支 -> 不重复开，push 即更新。Body 写清做了啥、怎么验证的、哪些没验证；Closes #n 关联对应 issue。
-- 任何 `--force` / `--force-with-lease` 也要我明确说。
-- 当前就在主干分支上 -> 先开一条新 branch 再 commit + push，别直接推主干。
-- Message 简洁，描述这一步做了啥；保留 `Co-Authored-By` trailer。
+- 每个有意义的阶段一个 commit（一个 feature / fix / 一段测试跑通 / 一步 refactor），别攒成一个大 commit。Message 简洁；保留 `Co-Authored-By` trailer。
+- 只推自己的工作分支：`git push -u origin <当前分支>`。
+- **绝不主动动主干**（`main` / `master` / `staging` / `develop` 之类）：不 push、不 merge、不 rebase，除非我明确说。当前就在主干上 -> 先开一条新 branch。
+- `--force` / `--force-with-lease` 也要我明确说。
+- **任务做完 -> 自动开 PR**：`gh pr create` 到默认分支（`git symbolic-ref refs/remotes/origin/HEAD` 现取，别背常量）。只开，不 merge、不 approve、不打 auto-merge；分支已有 PR -> push 即更新。Body 写清做了啥、怎么验证的、哪些没验证；`Closes #n` 关联对应 issue。
