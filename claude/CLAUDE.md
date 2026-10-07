@@ -69,5 +69,5 @@ Profile（名字用项目名）。别写进 `.env`、shell rc 或仓库。
 
 ## 设计和改系统
 
-设计或修改系统时，铭记 `codebase-design` 和 `complexity-review` 两个 skill 里的规则：动手前先加载，
-提交前对照检查一遍。
+设计或修改系统时，铭记 `codebase-design`、`complexity-review` 和 `single-source-of-truth` 三个 skill
+里的规则：动手前先加载，提交前对照检查一遍。
