@@ -57,3 +57,17 @@ or pipe to `rg`. `pgrep`, `zgrep`, `git grep` still ok.
 - **绝不主动动主干**（`main` / `master` / `staging` / `develop` 之类）：不 push、不 merge、不 rebase，除非我明确说。当前就在主干上 -> 先开一条新 branch。
 - `--force` / `--force-with-lease` 也要我明确说。
 - **任务做完 -> 自动开 PR**：`gh pr create` 到默认分支（`git symbolic-ref refs/remotes/origin/HEAD` 现取，别背常量）。只开，不 merge、不 approve、不打 auto-merge；分支已有 PR -> push 即更新。Body 写清做了啥、怎么验证的、哪些没验证；`Closes #n` 关联对应 issue。
+
+## 环境变量走 mytokens
+
+项目要用的环境变量（密钥、token、OAuth client、endpoint……）一律由 `mytokens` 管，每个项目一个
+Profile（名字用项目名）。别写进 `.env`、shell rc 或仓库。
+
+- 带着跑：`(eval "$(mytokens env <project>)"; <cmd>)`
+- 加 / 改：非密值 `mytokens put <project> --set "NAME=value"`；密值 `mytokens put <project> --fields "NAME"`（弹窗，值不经过你）
+- 看有哪些：`mytokens list`（只有名字）
+
+## 设计和改系统
+
+设计或修改系统时，铭记 `codebase-design`、`complexity-review` 和 `single-source-of-truth` 三个 skill
+里的规则：动手前先加载，提交前对照检查一遍。
