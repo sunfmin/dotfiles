@@ -57,6 +57,7 @@ or pipe to `rg`. `pgrep`, `zgrep`, `git grep` still ok.
 - **绝不主动动主干**（`main` / `master` / `staging` / `develop` 之类）：不 push、不 merge、不 rebase，除非我明确说。当前就在主干上 -> 先开一条新 branch。
 - `--force` / `--force-with-lease` 也要我明确说。
 - **任务做完 -> 自动开 PR**：`gh pr create` 到默认分支（`git symbolic-ref refs/remotes/origin/HEAD` 现取，别背常量）。只开，不 merge、不 approve、不打 auto-merge；分支已有 PR -> push 即更新。Body 写清做了啥、怎么验证的、哪些没验证；`Closes #n` 关联对应 issue。
+- **PR 合并之后 -> 自动收尾**（我让你合并的，或者发现它已经合了）：删掉这条分支（远端和本地），切回默认分支并 `git pull`。`gh pr merge --delete-branch` 一步做完前两样。
 
 ## 环境变量走 mytokens
 
