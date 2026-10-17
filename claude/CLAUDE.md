@@ -59,6 +59,12 @@ or pipe to `rg`. `pgrep`, `zgrep`, `git grep` still ok.
 - **任务做完 -> 自动开 PR**：`gh pr create` 到默认分支（`git symbolic-ref refs/remotes/origin/HEAD` 现取，别背常量）。只开，不 merge、不 approve、不打 auto-merge；分支已有 PR -> push 即更新。Body 写清做了啥、怎么验证的、哪些没验证；`Closes #n` 关联对应 issue。
 - **PR 合并之后 -> 自动收尾**（我让你合并的，或者发现它已经合了）：删掉这条分支（远端和本地），切回默认分支并 `git pull`。`gh pr merge --delete-branch` 一步做完前两样。
 
+## GitHub issue
+
+- 发出去的 issue 一律打 `ready-for-agent`。有疑虑要我拍板的 -> 发之前当场问我，确认好再发，别发出去再换别的标签等我。
+- 能不能开工只靠 blocked by 表达（GitHub issue dependencies，正文 `## Blocked by` 同步写）。被挡住**不是**去掉 `ready-for-agent` 的理由，阻塞解除后也不用回头改标签。
+- 仔细设 blocked by：照验收条件逐条看它真正依赖什么，缺的补上；「有更好、没有也行」的软依赖别挂，正文写清「有就用，不等它」。大迁移要删旧实现时，核对旧实现的每块功能都有对应 issue 挡在删除那张前面。
+
 ## 环境变量走 mytokens
 
 项目要用的环境变量（密钥、token、OAuth client、endpoint……）一律由 `mytokens` 管，每个项目一个
