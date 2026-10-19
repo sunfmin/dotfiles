@@ -65,6 +65,20 @@ or pipe to `rg`. `pgrep`, `zgrep`, `git grep` still ok.
 - 能不能开工只靠 blocked by 表达（GitHub issue dependencies，正文 `## Blocked by` 同步写）。被挡住**不是**去掉 `ready-for-agent` 的理由，阻塞解除后也不用回头改标签。
 - 仔细设 blocked by：照验收条件逐条看它真正依赖什么，缺的补上；「有更好、没有也行」的软依赖别挂，正文写清「有就用，不等它」。大迁移要删旧实现时，核对旧实现的每块功能都有对应 issue 挡在删除那张前面。
 
+## Homebrew 项目：fleet 做完就发布并安装
+
+适用：项目通过 Homebrew tap 发布，且本机有 afkconvoy fleet 在做它的 issue。只在我的会话里执行，**fleet worker 永远不执行**。
+
+触发：这个 repo 的 fleet 已 idle（工作目录是本 checkout 的那个 `afkconvoy run`，它 stdout 文件里最后一个完成的 tick 行有 `holding 0/` 和 `frontier 0`，landing train 上没有 PR），且 `main` 比最新的 `v*` tag 新 -> 不用问，直接：
+
+1. 版本号：默认升 patch；自上个 tag 以来合并的 PR 里有带 `release:minor` 标签的就升 minor（repo 没这个标签就先建）。
+2. 开 `release-<version>` 分支：改项目的版本号（如 `Cargo.toml` 的 `version` + `cargo update -w`），commit `<项目名> <version>`，开 PR 列出自上个 tag 以来的 PR，然后 `gh pr merge --squash --delete-branch`。这条规则就是合并这张版本号 PR 进主干的明确授权（只限这张）。
+3. 回 `main` 并 pull，`git tag -a v<version>` 并推送，然后照项目 README 里写的发布步骤发到 tap。CI 发布不了（如缺 tap token）就按 README 的手动步骤（如 `packaging/release.sh check/build/package/publish`）。
+4. `brew update && brew upgrade <tap>/<formula>`，用 `--version` 确认装上的是新版。
+5. 把本机所有用这个软件跑着的常驻进程都用新版本重启（afkconvoy 就是每个 `afkconvoy run`，不管它在哪个 repo）。一次一个：先记下它的工作目录、完整命令行、stdout 去向（`ps`、`lsof -d cwd,1`）；SIGTERM 并等它退出；再从同一工作目录 `nohup <同样的命令行> </dev/null >><它的 stdout 文件> 2>&1 &`。原 stdout 不是它自己的文件（`/dev/null`、别的会话在 `/private/tmp` 下的文件）-> 改写到 `~/Library/Logs/<软件>-<repo>-run.log`。等它跑出第一个完成的 tick（或等价的就绪行）再动下一个。
+
+报告：版本号、包含的 PR、重启了哪些进程（repo、旧 PID、新 PID）、每步实测秒数。
+
 ## 环境变量走 mytokens
 
 项目要用的环境变量（密钥、token、OAuth client、endpoint……）一律由 `mytokens` 管，每个项目一个
