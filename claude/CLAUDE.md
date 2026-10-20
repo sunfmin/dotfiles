@@ -92,3 +92,8 @@ Profile（名字用项目名）。别写进 `.env`、shell rc 或仓库。
 
 设计或修改系统时，铭记 `codebase-design`、`complexity-review` 和 `single-source-of-truth` 三个 skill
 里的规则：动手前先加载，提交前对照检查一遍。
+
+## 给别的 APP 用的文本 -> 剪贴板
+
+建议我拿去别的 APP 里发 / 填的文本（微信回复、Slack 消息、邮件、表单内容……）-> 回复里给出全文的同时，
+直接 `printf '%s' '<文本>' | pbcopy` 复制好，并说一句「已复制」。不用等我开口。
