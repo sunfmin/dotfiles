@@ -97,3 +97,10 @@ Profile（名字用项目名）。别写进 `.env`、shell rc 或仓库。
 
 建议我拿去别的 APP 里发 / 填的文本（微信回复、Slack 消息、邮件、表单内容……）-> 回复里给出全文的同时，
 直接 `printf '%s' '<文本>' | pbcopy` 复制好，并说一句「已复制」。不用等我开口。
+
+## Flux 一律带 timeout
+
+手动跑 Flux（`cargo flux`、`./verify.sh`、`--only-check`……）跟 gate 一样带上
+`FLUXFLAGS="-Ftimings -Ffixpoint-timeout=20 -Fcatch-bugs"`：单个函数的求解超过 20s 就报错并点名，
+一次跑完列出所有慢函数和最慢的几个。不带它，一个卡住的 fixpoint 查询能无声地跑几十分钟（实测 30+ 分钟、6.5GB）。
+超时 = 那个函数的 spec / 循环要拆小，不是把时限调大。
