@@ -22,6 +22,7 @@
 
 ## 问我（3、4）
 
+- 变不成可逆的（删除、批量开票 / 改标签这类对外写）：动手前逐项看清对象。删除先确认没有进程在用；批量的先演练或把每一项打印出来过一遍（Bash 工具跑的是 zsh，数组下标从 1 开始；系统 bash 是 3.2：两个都没有 `declare -A`）。有在用的、看不懂的就停下问我。
 - 别编一条明显更差的路来凑选项。
 - 问之前把不依赖答案的部分先做完。
 - 夜里我多半在睡，问题会卡到第二天：能自己定的自己定，选可逆的做下去，记下来早上一起报。
@@ -31,14 +32,14 @@
 阶段性任务完成 -> 自动 commit + push 到当前工作分支（覆盖默认的「要求了才 commit / push」）。非 git repo -> skip。
 
 - 一个有意义的阶段一个 commit（feature / fix / 一段测试跑通 / 一步 refactor）。Message 简洁，保留 `Co-Authored-By` trailer。
-- 只推自己的分支：`git push -u origin <当前分支>`。在主干（`main` / `master` / `staging` / `develop`）上 -> 先开新分支。主干的 push / merge / rebase 和 `--force` / `--force-with-lease` 都要我明确说。
+- 只推自己的分支：`git push -u origin <当前分支>`。在主干（`main` / `master` / `staging` / `develop`）上 -> 先开新分支。主干的 push / merge / rebase 和 `--force` / `--force-with-lease` 都要我明确说（项目 CLAUDE.md 写明自动合并的照它）。任务的结果要经过主干才算完（发布、让配置生效）不算明确说：PR 开好，报告里写明停在合并。
 - 任务做完 -> `gh pr create` 到默认分支（`git symbolic-ref refs/remotes/origin/HEAD` 现取）。只开，不 merge、不 approve、不 auto-merge；分支已有 PR -> push 即更新。Body 写做了啥、怎么验证、哪些没验证；`Closes #n`。
 - PR 合并后（我让合的，或发现已合）-> `gh pr merge --delete-branch` 删远端和本地分支，切回默认分支 `git pull`。
 
 ## GitHub issue
 
 - 一律打 `ready-for-agent`。要我拍板的，发之前问。
-- 能否开工只靠 blocked by（GitHub issue dependencies，正文 `## Blocked by` 同步写）。被挡住不是去掉标签的理由，解除后也不用改。
+- 能否开工只靠 blocked by（GitHub issue dependencies，正文 `## Blocked by` 同步写）。发出后不摘、不换 `ready-for-agent`：被挡住、想让 fleet 先做别的、要在会话里自己做，都不是理由；真要 fleet 别碰，先问我。解除后也不用改。
 - 照验收条件逐条找真依赖，缺的补上；「有更好、没有也行」的软依赖不挂，正文写「有就用，不等它」。大迁移删旧实现前，核对旧实现每块功能都有 issue 挡在删除那张前面。
 
 ## Homebrew 项目：fleet 做完就发布并安装
