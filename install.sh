@@ -62,6 +62,11 @@ log "Linking Claude settings into ~/.claude/"
 link "$REPO_DIR/claude/settings.json" "$HOME/.claude/settings.json"
 link "$REPO_DIR/claude/statusline.sh" "$HOME/.claude/statusline.sh"
 link "$REPO_DIR/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
+link "$REPO_DIR/claude/daily-review/com.sunfmin.claude-daily-review.plist" "$HOME/Library/LaunchAgents/com.sunfmin.claude-daily-review.plist"
+# The morning review of yesterday's Claude Code work (claude/daily-review).
+launchctl bootout "gui/$(id -u)/com.sunfmin.claude-daily-review" 2>/dev/null || true
+launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/com.sunfmin.claude-daily-review.plist" \
+    && ok "loaded com.sunfmin.claude-daily-review (06:00 daily)"
 chmod +x "$REPO_DIR/claude/statusline.sh"
 
 # --- iTerm2 ----------------------------------------------------------------
