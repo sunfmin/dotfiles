@@ -36,7 +36,7 @@ git -C "$repo" fetch -q origin "$base"
 git -C "$repo" worktree add -q -B "$branch" "$wt" "origin/$base"
 trap 'git -C "$repo" worktree remove --force "$wt" 2>/dev/null || true' EXIT
 
-prompt="$(sed -e "s|{{DAY}}|$day|g" -e "s|{{DIGEST}}|$digest|g" -e "s|{{PRIVATE}}|$out/$day.md|g" "$here/prompt.md")"
+prompt="$(sed -e "s|{{DAY}}|$day|g" -e "s|{{DIGEST}}|$digest|g" -e "s|{{PRIVATE}}|$out/$day.md|g" -e "s|{{BASE}}|$base|g" "$here/prompt.md")"
 
 cd "$wt"
 timeout 3600 claude -p "$prompt" \
