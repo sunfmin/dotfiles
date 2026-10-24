@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-# Review one day of Claude Code work against the principles in CLAUDE.md and
-# open a PR on this repo with what to change. Run by launchd each morning
-# for the day before; run again for a day it skips one whose PR exists.
-#
-# The detailed report stays on this machine (this repo is public); the PR
-# carries only the abstracted findings and the rule changes.
+# Review one day of Claude Code work against the principles in CLAUDE.md:
+# a detailed report on this machine, and, when a rule should change, a PR
+# on this repo with the change and the abstracted findings in its body (the
+# repo is public). Run by launchd each morning for the day before; run
+# again for a day already reviewed (its report or PR exists), it does nothing.
 #
 # Usage: run.sh [YYYY-MM-DD]   (default: yesterday)
 set -euo pipefail
@@ -18,8 +17,9 @@ mkdir -p "$out"
 
 echo "$(date '+%F %T') review $day: start"
 
-if [[ -n "$(gh pr list -R sunfmin/dotfiles --head "$branch" --state all --json number -q '.[].number')" ]]; then
-  echo "$(date '+%F %T') review $day: PR exists, nothing to do"
+if [[ -s "$out/$day.md" ]] \
+  || [[ -n "$(gh pr list -R sunfmin/dotfiles --head "$branch" --state all --json number -q '.[].number')" ]]; then
+  echo "$(date '+%F %T') review $day: already reviewed, nothing to do"
   exit 0
 fi
 
