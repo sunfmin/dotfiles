@@ -65,7 +65,7 @@ or pipe to `rg`. `pgrep`, `zgrep`, `git grep` still ok.
 
 - 每个有意义的阶段一个 commit（一个 feature / fix / 一段测试跑通 / 一步 refactor），别攒成一个大 commit。Message 简洁；保留 `Co-Authored-By` trailer。
 - 只推自己的工作分支：`git push -u origin <当前分支>`。
-- **绝不主动动主干**（`main` / `master` / `staging` / `develop` 之类）：不 push、不 merge、不 rebase，除非我明确说。当前就在主干上 -> 先开一条新 branch。
+- **绝不主动动主干**（`main` / `master` / `staging` / `develop` 之类）：不 push、不 merge、不 rebase，除非我明确说（项目 CLAUDE.md 写明自动合并的照它）。任务的结果要经过主干才算完（发布、让配置生效）不算明确说：PR 开好，报告里写明停在合并。当前就在主干上 -> 先开一条新 branch。
 - `--force` / `--force-with-lease` 也要我明确说。
 - **任务做完 -> 自动开 PR**：`gh pr create` 到默认分支（`git symbolic-ref refs/remotes/origin/HEAD` 现取，别背常量）。只开，不 merge、不 approve、不打 auto-merge；分支已有 PR -> push 即更新。Body 写清做了啥、怎么验证的、哪些没验证；`Closes #n` 关联对应 issue。
 - **PR 合并之后 -> 自动收尾**（我让你合并的，或者发现它已经合了）：删掉这条分支（远端和本地），切回默认分支并 `git pull`。`gh pr merge --delete-branch` 一步做完前两样。
@@ -73,7 +73,7 @@ or pipe to `rg`. `pgrep`, `zgrep`, `git grep` still ok.
 ## GitHub issue
 
 - 发出去的 issue 一律打 `ready-for-agent`。有疑虑要我拍板的 -> 发之前当场问我，确认好再发，别发出去再换别的标签等我。
-- 能不能开工只靠 blocked by 表达（GitHub issue dependencies，正文 `## Blocked by` 同步写）。被挡住**不是**去掉 `ready-for-agent` 的理由，阻塞解除后也不用回头改标签。
+- 能不能开工只靠 blocked by 表达（GitHub issue dependencies，正文 `## Blocked by` 同步写）。发出后不摘、不换 `ready-for-agent`：被挡住、想让 fleet 先做别的、要在会话里自己做，都**不是**理由；真要 fleet 别碰，先问我。阻塞解除后也不用回头改标签。
 - 仔细设 blocked by：照验收条件逐条看它真正依赖什么，缺的补上；「有更好、没有也行」的软依赖别挂，正文写清「有就用，不等它」。大迁移要删旧实现时，核对旧实现的每块功能都有对应 issue 挡在删除那张前面。
 
 ## Homebrew 项目：fleet 做完就发布并安装
@@ -120,6 +120,9 @@ Profile（名字用项目名）。别写进 `.env`、shell rc 或仓库。
 
 - 事实自己查，别问我。「是不是 bug」「为什么坏了」「文档怎么规定的」都是事实。
 - 能先变成可逆的（备份、开分支、留旧版本），就先做成可逆的再直接做，不用问。
+  变不成可逆的（删除、批量开票 / 改标签这类对外写）：动手前逐项看清对象。删除先确认没有进程在用；
+  批量的先演练或把每一项打印出来过一遍（shell 是 zsh：数组下标从 1 开始，没有 `declare -A`）。
+  有在用的、看不懂的就停下问我。
 - 只有真正要我取舍的才问：会丢东西、要花钱、对外可见，或者有几条路各有代价、我没有依据替你选。
 - 别为了凑选项去编一条明显更差的路，再拿它当理由来问。
 - 问之前把不依赖答案的部分都先做完。
