@@ -42,6 +42,7 @@
 
 - 一律打 `ready-for-agent`。内容拿不准的，consult 后再发。
 - 能否开工只靠 blocked by（GitHub issue dependencies，正文 `## Blocked by` 同步写）。发出后不摘、不换 `ready-for-agent`：被挡住、想让 fleet 先做别的、想自己做，都不是理由；要 fleet 别碰，用 blocked by 表达。
+- 发出去的票不改正文：要补充或改动就开新票，用到原票的结果就 blocked by 原票。fleet 随时可能已经开工，改正文它看不到。
 - 照验收条件逐条找真依赖，缺的补上；「有更好、没有也行」的软依赖不挂，正文写「有就用，不等它」。大迁移删旧实现前，核对旧实现每块功能都有 issue 挡在删除那张前面。
 
 ## Homebrew 项目：fleet 做完就发布并安装
