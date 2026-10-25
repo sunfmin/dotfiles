@@ -73,6 +73,7 @@
   - `source` 在 `sunfmin/` 下是我的，仓库在 `~/Developments/<repo>`：改 `skillPath` 那个文件 -> commit + push -> `npx skills update`。
   - 其他 `source` 是第三方：不改，报告里写明要改什么。
 - **shell**：Bash 工具跑的是 zsh（数组下标从 1 开始），`/bin/bash` 是 3.2；两者都没有 `declare -A`。
+  - 命令行里的参数展开一层一步：`p=${l#*pid=}; p=${p%% *}`；再复杂的写进脚本文件，`zsh <file>` 跑。嵌套展开（`${${l#*pid=}%% *}`）Claude Code 解析不了，弹「Dangerous rm operation not ruled out」，bypass 模式也拦，我不在时整条活停住（实测停了 9 小时）。
 - **sudo**：没有 tty，每条都写 `SUDO_ASKPASS=$HOME/.local/bin/askpass sudo -A <cmd>`。会弹窗让我逐条批准；被拒就是失败，不重试。
 - **Flux**：手动跑（`cargo flux`、`./verify.sh`、`--only-check`……）也带 `FLUXFLAGS="-Ftimings -Ffixpoint-timeout=20 -Fcatch-bugs"`。不带的话一个卡住的 fixpoint 查询能无声跑几十分钟（实测 30+ 分钟、6.5GB）。超时 = 那个函数的 spec / 循环要拆小，不是调大时限。
 - **大文件**（模型权重、数据集、release、镜像、视频……）：先查本地缓存（`~/.cache/huggingface`、`~/.cache/modelscope`、下载目录、工具自带缓存），有就用；没有我的同意不下（工具首次运行时的隐式拉取也算），绕开它继续，报告里写明要下什么、多大。
