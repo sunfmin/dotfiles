@@ -45,19 +45,9 @@
 - 改发出去的票前，先看有没有开工（有 `convoy:branch` 评论、被 claim、有 PR）：没开工就直接改正文；已开工就不改，开新票，用到原票的结果就 blocked by 原票。开工的 worker 看不到正文的改动。
 - 照验收条件逐条找真依赖，缺的补上；「有更好、没有也行」的软依赖不挂，正文写「有就用，不等它」。大迁移删旧实现前，核对旧实现每块功能都有 issue 挡在删除那张前面。
 
-## Homebrew 项目：fleet 做完就发布并安装
+## Homebrew 项目的发版
 
-适用：项目通过 Homebrew tap 发布，且本机有 afkconvoy fleet 在做它的 issue。只在我的会话里执行，**fleet worker 永远不执行**。
-
-触发：这个 repo 的 fleet 已 idle（本 checkout 的 `afkconvoy run`，stdout 里最后一个完成的 tick 行有 `holding 0/` 和 `frontier 0`，landing train 上没有 PR），且 `main` 比最新的 `v*` tag 新 -> 不用问，直接：
-
-1. 版本号：默认升 patch；上个 tag 以来合并的 PR 有 `release:minor` 标签就升 minor（没这个标签就先建）。
-2. 开 `release-<version>` 分支改版本号（如 `Cargo.toml` 的 `version` + `cargo update -w`），commit `<项目名> <version>`，开 PR 列出上个 tag 以来的 PR，`gh pr merge --squash --delete-branch`。这条规则就是合并这张版本号 PR 的明确授权（只限这张）。
-3. 回 `main` pull，`git tag -a v<version>` 并推送，照 README 的发布步骤发到 tap；CI 发不了就走 README 的手动步骤（如 `packaging/release.sh`）。
-4. `brew update && brew upgrade <tap>/<formula>`，`--version` 确认是新版。
-5. 用新版逐个重启本机所有跑着它的常驻进程（afkconvoy 就是每个 `afkconvoy run`）：记下工作目录、完整命令行、stdout 去向（`ps`、`lsof -d cwd,1`）；SIGTERM 等它退出；同目录 `nohup <同样的命令行> </dev/null >><它的 stdout 文件> 2>&1 &`。原 stdout 不是它自己的文件（`/dev/null`、别的会话的 `/private/tmp` 文件）-> 改写到 `~/Library/Logs/<软件>-<repo>-run.log`。等它跑出第一个完成的 tick（或就绪行）再动下一个。
-
-报告：版本号、包含的 PR、重启了哪些进程（repo、旧 PID、新 PID）、每步实测秒数。
+afkconvoy 的 fleet 自己发（control ADR 0003）：配了 cut 的 repo，fleet 一 idle 就切版本、发布、安装，host runner 自己换到新版。不手动发；发版失败看 escalate 票和 watch 的记录（control ADR 0005）。还没配 cut 的（`afkconvoy config <checkout>` 的答复里没有 `cut`），开票让它配上。
 
 ## 工具链（6）
 
