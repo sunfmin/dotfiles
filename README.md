@@ -29,8 +29,6 @@ npm i -g @anthropic-ai/claude-code   # Claude Code CLI
 | --- | --- | --- |
 | `claude/settings.json` | `~/.claude/settings.json` | symlink |
 | `claude/statusline.sh` | `~/.claude/statusline.sh` | symlink |
-| `claude/daily-review/com.sunfmin.claude-daily-review.plist` | `~/Library/LaunchAgents/` | symlink, loaded: at 06:00 reviews yesterday's Claude Code work against the principles in `CLAUDE.md`: a detailed report in `~/.local/share/claude-daily-review/`, and a PR here when a rule should change, its findings in the PR body |
-| `cmux/cmux.json` | `~/.config/cmux/cmux.json` | symlink |
 | `ghostty/config` | `~/.config/ghostty/config` | symlink |
 | `iterm/Default.json` | Default profile inside `~/Library/Preferences/com.googlecode.iterm2.plist` | plist merge by Guid |
 | `iterm/app-prefs.json` | top-level keys in the same plist | plist merge |

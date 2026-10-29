@@ -6,7 +6,7 @@
 #   brew bundle --file=Brewfile          # iTerm2, Ghostty, cmux, node, jq, git
 #   npm i -g @anthropic-ai/claude-code   # Claude Code CLI
 #
-# Config: file-based configs (claude, cmux, ghostty) are installed as symlinks
+# Config: file-based configs (claude, ghostty) are installed as symlinks
 # pointing back into the repo, so editing the live file *is* editing the repo.
 # Any existing file at the target is removed without backup.
 #
@@ -62,11 +62,6 @@ log "Linking Claude settings into ~/.claude/"
 link "$REPO_DIR/claude/settings.json" "$HOME/.claude/settings.json"
 link "$REPO_DIR/claude/statusline.sh" "$HOME/.claude/statusline.sh"
 link "$REPO_DIR/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
-link "$REPO_DIR/claude/daily-review/com.sunfmin.claude-daily-review.plist" "$HOME/Library/LaunchAgents/com.sunfmin.claude-daily-review.plist"
-# The morning review of yesterday's Claude Code work (claude/daily-review).
-launchctl bootout "gui/$(id -u)/com.sunfmin.claude-daily-review" 2>/dev/null || true
-launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/com.sunfmin.claude-daily-review.plist" \
-    && ok "loaded com.sunfmin.claude-daily-review (06:00 daily)"
 chmod +x "$REPO_DIR/claude/statusline.sh"
 
 # --- iTerm2 ----------------------------------------------------------------
@@ -132,13 +127,6 @@ PYEOF
 killall -u "$USER" cfprefsd 2>/dev/null || true
 ok "applied iTerm profile + app-level preferences"
 
-# --- cmux ------------------------------------------------------------------
-
-if [[ -f "$REPO_DIR/cmux/cmux.json" ]]; then
-    log "Linking cmux config into ~/.config/cmux/"
-    link "$REPO_DIR/cmux/cmux.json" "$HOME/.config/cmux/cmux.json"
-fi
-
 # --- Ghostty ---------------------------------------------------------------
 #
 # Ghostty on macOS reads from BOTH paths and merges them, with the macOS path
@@ -163,7 +151,7 @@ Install apps yourself if missing:
   brew bundle --file="$REPO_DIR/Brewfile"
   npm i -g @anthropic-ai/claude-code
 
-Claude / cmux / Ghostty configs are now symlinks into $REPO_DIR —
+Claude / Ghostty configs are now symlinks into $REPO_DIR —
 edit them in either place and the change is the same. Commit + push when ready.
 
 The Default profile in iTerm has been merged into the plist (not a symlink);
