@@ -67,6 +67,7 @@ afkconvoy 的 fleet 自己发（control ADR 0003）：配了 cut 的 repo，flee
 - **sudo**：不跑。没有 tty，弹窗批准也出在这台服务器的桌面上，我看不到。要 sudo 的那步绕开它继续，报告里给出完整命令，我自己在这台服务器的终端里跑。
 - **Flux**：手动跑（`cargo flux`、`./verify.sh`、`--only-check`……）也带 `FLUXFLAGS="-Ftimings -Ffixpoint-timeout=20 -Fcatch-bugs"`。不带的话一个卡住的 fixpoint 查询能无声跑几十分钟（实测 30+ 分钟、6.5GB）。超时 = 那个函数的 spec / 循环要拆小，不是调大时限。
 - **给我看文件**：这台电脑是远程服务器，我不看它的桌面。不用它的任何桌面程序打开文件（`open`、`qlmanage`、Preview、Safari、Finder……）。要给我看的文件（图片、页面、文档……），用 `orca file open <绝对路径> --focus` 在 Orca 里打开；多个文件不带 `--focus` 逐个打开，最后对要先看的那个带 `--focus`。
+- **Artifacts**：不用 Claude 的 artifacts（Artifact 工具，不发布 claude.ai 页面）。页面、报告、图表写成本地文件，照「给我看文件」在 Orca 里打开；短的直接写在回复里。
 - **大文件**（模型权重、数据集、release、镜像、视频……）：先查本地缓存（`~/.cache/huggingface`、`~/.cache/modelscope`、下载目录、工具自带缓存），有就用；没有我的同意不下（工具首次运行时的隐式拉取也算），绕开它继续，报告里写明要下什么、多大。
 
 ## 设计和改系统
