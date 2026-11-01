@@ -59,7 +59,9 @@ afkconvoy 的 fleet 自己发（control ADR 0003）：配了 cut 的 repo，flee
   - 加 / 改：非密值 `mytokens put <project> --set "NAME=value"`；密值 `mytokens put <project> --fields "NAME"`（弹窗，值不经过你）
   - 列名字：`mytokens list`
   - 新建任何凭据（token、密钥、部署 key）前，先在这里查有没有现成的。
-- **推送通知**：推到我手机的，所有项目一律走 Bark；推送 URL（含 key）只存在 mytokens 的 `bark`，用时 `mytokens get bark` 现取。
+- **推送通知**：推到我手机，所有项目一律走 Bark；推送 URL（含 key）只存在 mytokens 的 `bark`。
+  - 什么时候推：工作卡在要我拍板或动手的事上；或你判断我现在就该知道的决定。一件事推一次，其余照旧记进报告。
+  - 怎么推：`curl -sS "$(mytokens get bark)" --data-urlencode "title=<项目>" --data-urlencode "body=<一行：要我做什么>" --data-urlencode "url=<链接>"`；只是告知的再加 `--data-urlencode "level=passive"`（不亮屏、不响）。
 - **skills**：`npx skills` 装在 `~/.agents/skills/<name>/`（链到 `~/.claude/skills/`），**那里不改**，`npx skills update` 会覆盖。
   - 来源看 `~/.agents/.skill-lock.json` 每个 skill 的 `source` + `skillPath`。
   - `source` 在 `sunfmin/` 下是我的，仓库在 `~/Developments/<repo>`：改 `skillPath` 那个文件 -> commit + push -> `npx skills update`。
