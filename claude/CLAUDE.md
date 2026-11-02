@@ -67,7 +67,7 @@ afkconvoy 的 fleet 自己发（control ADR 0003）：配了 cut 的 repo，flee
   - `source` 在 `sunfmin/` 下是我的，仓库在 `~/Developments/<repo>`：改 `skillPath` 那个文件 -> commit + push -> `npx skills update`。
   - 其他 `source` 是第三方：不改，报告里写明要改什么。
 - **shell**：Bash 工具跑的是 zsh（数组下标从 1 开始），`/bin/bash` 是 3.2；两者都没有 `declare -A`。
-- **sudo**：没有 tty，每条都写 `SUDO_ASKPASS=$HOME/.local/bin/askpass sudo -A <cmd>`。会弹窗让我逐条批准；被拒就是失败，不重试。
+- **sudo**（仅限 admin 用户；标准用户见下条，不用 sudo）：没有 tty，每条都写 `SUDO_ASKPASS=$HOME/.local/bin/askpass sudo -A <cmd>`。会弹窗让我逐条批准；被拒就是失败，不重试。
 - **标准用户（非 admin）**：先用 `dseditgroup -o checkmember -m "$(id -un)" admin` 判断。回答 `NOT a member` 就是没有 root，`/opt/homebrew`、`/usr/local` 写不进去，sudo 也不可用。这时 Homebrew 和所有工具都装在 `$HOME` 下：
   - brew：`~/.homebrew`（`git clone https://github.com/Homebrew/brew ~/.homebrew`，再 `eval "$(~/.homebrew/bin/brew shellenv)"`）。非默认前缀下，很多 formula 没有预编译包，要从源码编译，会比较慢，先估时。
   - 其余：Python CLI 用 `uv tool install`，npm 全局包用 `--prefix ~/.local`，单个二进制放 `~/.local/bin`。
