@@ -61,8 +61,9 @@ link() {
 log "Linking Claude settings into ~/.claude/"
 link "$REPO_DIR/claude/settings.json" "$HOME/.claude/settings.json"
 link "$REPO_DIR/claude/statusline.sh" "$HOME/.claude/statusline.sh"
+link "$REPO_DIR/claude/bark-notify.sh" "$HOME/.claude/bark-notify.sh"
 link "$REPO_DIR/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
-chmod +x "$REPO_DIR/claude/statusline.sh"
+chmod +x "$REPO_DIR/claude/statusline.sh" "$REPO_DIR/claude/bark-notify.sh"
 
 # --- iTerm2 ----------------------------------------------------------------
 
