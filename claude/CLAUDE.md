@@ -74,6 +74,7 @@ afkconvoy 的 fleet 自己发（control ADR 0003）：配了 cut 的 repo，flee
   - 不往系统目录或别的用户的目录写，不为了装东西找 sudo。
 - **Flux**：手动跑（`cargo flux`、`./verify.sh`、`--only-check`……）也带 `FLUXFLAGS="-Ftimings -Ffixpoint-timeout=20 -Fcatch-bugs"`。不带的话一个卡住的 fixpoint 查询能无声跑几十分钟（实测 30+ 分钟、6.5GB）。超时 = 那个函数的 spec / 循环要拆小，不是调大时限。
 - **大文件**（模型权重、数据集、release、镜像、视频……）：先查本地缓存（`~/.cache/huggingface`、`~/.cache/modelscope`、下载目录、工具自带缓存），有就用；没有我的同意不下（工具首次运行时的隐式拉取也算），绕开它继续，报告里写明要下什么、多大。
+  - 例外（已长期同意）：repo 在 `gate-needs` / `cut-needs` 里声明、钉了版本的工具链（编译器、检查器、求解器及其依赖，如 GHC），直接装进 `$HOME`，不用问。不写系统目录、不用 sudo；超出声明的照旧先问。
 
 ## 设计和改系统
 
