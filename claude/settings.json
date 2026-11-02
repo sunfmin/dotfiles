@@ -46,6 +46,16 @@
             "timeout": 20
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$HOME/.claude/guard-branch-delete.sh\"",
+            "timeout": 20
+          }
+        ]
       }
     ],
     "SessionStart": [
