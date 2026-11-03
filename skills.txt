@@ -1,0 +1,6 @@
+# Global skills every machine of mine has: `<source> <skill>...`, or `<source> *` for all of a source's skills.
+# claude/skills-sync.sh (run by install.sh) installs them; `install.sh --check` reports drift.
+mattpocock/skills *
+sunfmin/mypython mypython
+sunfmin/mytokens mytokens
+sunfmin/product-team complexity-review single-source-of-truth
