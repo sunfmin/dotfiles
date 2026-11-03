@@ -78,6 +78,8 @@ link "$REPO_DIR/claude/bark-notify.sh" "$HOME/.claude/bark-notify.sh"
 link "$REPO_DIR/claude/guard-branch-delete.sh" "$HOME/.claude/guard-branch-delete.sh"
 link "$REPO_DIR/claude/guard-agents-skills.sh" "$HOME/.claude/guard-agents-skills.sh"
 link "$REPO_DIR/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
+# Codex reads its global instructions from ~/.codex/AGENTS.md: the same principles.
+link "$REPO_DIR/claude/CLAUDE.md" "$HOME/.codex/AGENTS.md"
 chmod +x "$REPO_DIR"/claude/*.sh
 
 log "Merging claude/settings.mine.json into ~/.claude/settings.json"

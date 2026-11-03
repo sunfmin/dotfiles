@@ -28,7 +28,7 @@ case "$mode" in
   apply)
     entries | while read -r src names; do
       # shellcheck disable=SC2086
-      npx -y skills add "$src" -g -y -a claude-code -s $names </dev/null >/dev/null 2>&1 \
+      npx -y skills add "$src" -g -y -a claude-code codex -s $names </dev/null >/dev/null 2>&1 \
         && echo "  installed from $src: $names" \
         || { echo "  FAILED: npx skills add $src -s $names" >&2; exit 1; }
     done

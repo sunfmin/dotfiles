@@ -36,6 +36,7 @@ npm i -g @anthropic-ai/claude-code   # Claude Code CLI
 | `claude/settings.mine.json` | the keys we own inside `~/.claude/settings.json` | merge (`claude/settings-merge.sh`) |
 | `skills.txt` | global skills (`~/.claude/skills`, `~/.agents/.skill-lock.json`) | `npx skills add` (`claude/skills-sync.sh`) |
 | `claude/CLAUDE.md`, `claude/*.sh` hooks | `~/.claude/` | symlink |
+| `claude/CLAUDE.md` | `~/.codex/AGENTS.md` (Codex reads the same principles) | symlink |
 | `claude/statusline.sh` | `~/.claude/statusline.sh` | symlink |
 | `ghostty/config` | `~/.config/ghostty/config` | symlink |
 | `iterm/Default.json` | Default profile inside `~/Library/Preferences/com.googlecode.iterm2.plist` | plist merge by Guid |
