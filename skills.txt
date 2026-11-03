@@ -1,4 +1,4 @@
-# Global skills every machine of mine has: `<source> <skill>...`, or `<source> *` for all of a source's skills.
+# Global skills every machine of mine has, for every harness (Claude Code, Codex): `<source> <skill>...`, or `<source> *` for all of a source's skills.
 # claude/skills-sync.sh (run by install.sh) installs them; `install.sh --check` reports drift.
 mattpocock/skills *
 sunfmin/mypython mypython
