@@ -68,10 +68,7 @@ afkconvoy 的 fleet 自己发（control ADR 0003）：配了 cut 的 repo，flee
   - 其他 `source` 是第三方：不改，报告里写明要改什么。
 - **shell**：Bash 工具跑的是 zsh（数组下标从 1 开始），`/bin/bash` 是 3.2；两者都没有 `declare -A`。
 - **sudo**（仅限 admin 用户；标准用户见下条，不用 sudo）：没有 tty，每条都写 `SUDO_ASKPASS=$HOME/.local/bin/askpass sudo -A <cmd>`。会弹窗让我逐条批准；被拒就是失败，不重试。
-- **标准用户（非 admin）**：先用 `dseditgroup -o checkmember -m "$(id -un)" admin` 判断。回答 `NOT a member` 就是没有 root，`/opt/homebrew`、`/usr/local` 写不进去，sudo 也不可用。这时 Homebrew 和所有工具都装在 `$HOME` 下：
-  - brew：用自己的 `~/homebrew`，装法和装软件只走 `~/Developments/mac-studio-setup` 的 `ssh/user/60-homebrew.sh`（它管下载源、核对 sha、写 `brew.env`；PATH 由 `~/.zshenv` 的托管段加载）。先看 `~/homebrew/bin/brew` 在不在，在就直接用，不另装一份，也不往 shell 配置里再加 brew。不用 `~/.homebrew`：那是 Homebrew 的每用户配置目录。非默认前缀下没有能挪位置的预编译包的软件要从源码编译，会慢，先估时。
-  - 其余：Python CLI 用 `uv tool install`，npm 全局包用 `--prefix ~/.local`，单个二进制放 `~/.local/bin`。
-  - 不往系统目录或别的用户的目录写，不为了装东西找 sudo。
+- **标准用户（非 admin）**：先用 `dseditgroup -o checkmember -m "$(id -un)" admin` 判断。回答 `NOT a member` 就是没有 root，sudo 也不可用。装什么、装到哪、brew 怎么装（`~/homebrew`），都照 `mac-host` skill 做；不往系统目录或别的用户的目录写，不为了装东西找 sudo。
 - **Flux**：手动跑（`cargo flux`、`./verify.sh`、`--only-check`……）也带 `FLUXFLAGS="-Ftimings -Ffixpoint-timeout=20 -Fcatch-bugs"`。不带的话一个卡住的 fixpoint 查询能无声跑几十分钟（实测 30+ 分钟、6.5GB）。超时 = 那个函数的 spec / 循环要拆小，不是调大时限。
 - **下载和安装**：先查本地缓存（`~/.cache/huggingface`、`~/.cache/modelscope`、下载目录、工具自带缓存），有就用。
   - 工具直接装，不用问：装进 `$HOME`、钉了版本、来自官方源、删掉就撤回的编译器、运行时、检查器、求解器、测试用浏览器及其依赖。repo 的 `gate-needs` / `cut-needs` 声明了的，照它的版本装。

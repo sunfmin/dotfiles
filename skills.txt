@@ -4,4 +4,4 @@ mattpocock/skills *
 sunfmin/mypython mypython
 sunfmin/mytokens mytokens
 sunfmin/product-team complexity-review single-source-of-truth
-sunfmin/mac-studio-setup mac-host
+sunfmin/mac-host mac-host
