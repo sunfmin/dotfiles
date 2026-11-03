@@ -6,15 +6,22 @@
 #   brew bundle --file=Brewfile          # iTerm2, Ghostty, cmux, node, jq, git
 #   npm i -g @anthropic-ai/claude-code   # Claude Code CLI
 #
-# Config: file-based configs (claude, ghostty) are installed as symlinks
-# pointing back into the repo, so editing the live file *is* editing the repo.
-# Any existing file at the target is removed without backup.
+# Config: files whose whole content is ours (CLAUDE.md, hook scripts, ghostty)
+# are installed as symlinks into the repo, so editing the live file *is*
+# editing the repo. Any existing file at the target is removed without backup.
+#
+# Files other programs fill with their own state are never symlinked or stored
+# whole: the repo declares the part it owns and merges that in.
+# ~/.claude/settings.json gets claude/settings.mine.json
+# (claude/settings-merge.sh); global skills follow skills.txt
+# (claude/skills-sync.sh).
 #
 # iTerm's profile + app-prefs are NOT symlinks — they're merged into the iTerm
 # plist directly, since the plist isn't a file we own.
 #
 # Usage:
 #   ./install.sh                       # from a local clone (anywhere)
+#   ./install.sh --check               # report drift of what we own; change nothing
 #   curl -fsSL https://raw.githubusercontent.com/sunfmin/dotfiles/main/install.sh | bash
 #                                      # self-bootstraps by cloning to ~/dotfiles
 
@@ -32,7 +39,7 @@ else
     REPO_DIR=""
 fi
 
-if [[ -z "$REPO_DIR" || ! -f "$REPO_DIR/claude/settings.json" ]]; then
+if [[ -z "$REPO_DIR" || ! -f "$REPO_DIR/claude/settings.mine.json" ]]; then
     # Symlinks need a stable repo location — bootstrap into ~/dotfiles, not /tmp.
     if [[ -e "$DEFAULT_CLONE" ]]; then
         echo "error: $DEFAULT_CLONE already exists; cd into it and run ./install.sh manually" >&2
@@ -44,6 +51,13 @@ if [[ -z "$REPO_DIR" || ! -f "$REPO_DIR/claude/settings.json" ]]; then
 fi
 
 TS="$(date +%Y%m%d-%H%M%S)"
+
+if [[ "${1:-}" == "--check" ]]; then
+    rc=0
+    "$REPO_DIR/claude/settings-merge.sh" check || rc=1
+    "$REPO_DIR/claude/skills-sync.sh" check || rc=1
+    exit $rc
+fi
 
 log()  { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m!!\033[0m %s\n' "$*" >&2; }
@@ -58,13 +72,21 @@ link() {
 
 # --- Claude settings -------------------------------------------------------
 
-log "Linking Claude settings into ~/.claude/"
-link "$REPO_DIR/claude/settings.json" "$HOME/.claude/settings.json"
+log "Linking Claude config into ~/.claude/"
 link "$REPO_DIR/claude/statusline.sh" "$HOME/.claude/statusline.sh"
 link "$REPO_DIR/claude/bark-notify.sh" "$HOME/.claude/bark-notify.sh"
 link "$REPO_DIR/claude/guard-branch-delete.sh" "$HOME/.claude/guard-branch-delete.sh"
+link "$REPO_DIR/claude/guard-agents-skills.sh" "$HOME/.claude/guard-agents-skills.sh"
 link "$REPO_DIR/claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
-chmod +x "$REPO_DIR/claude/statusline.sh" "$REPO_DIR/claude/bark-notify.sh" "$REPO_DIR/claude/guard-branch-delete.sh"
+# Codex reads its global instructions from ~/.codex/AGENTS.md: the same principles.
+link "$REPO_DIR/claude/CLAUDE.md" "$HOME/.codex/AGENTS.md"
+chmod +x "$REPO_DIR"/claude/*.sh
+
+log "Merging claude/settings.mine.json into ~/.claude/settings.json"
+"$REPO_DIR/claude/settings-merge.sh" apply
+
+log "Installing global skills from skills.txt"
+"$REPO_DIR/claude/skills-sync.sh" apply
 
 # --- iTerm2 ----------------------------------------------------------------
 
@@ -153,8 +175,12 @@ Install apps yourself if missing:
   brew bundle --file="$REPO_DIR/Brewfile"
   npm i -g @anthropic-ai/claude-code
 
-Claude / Ghostty configs are now symlinks into $REPO_DIR —
+CLAUDE.md, the hook scripts and Ghostty config are symlinks into $REPO_DIR —
 edit them in either place and the change is the same. Commit + push when ready.
+
+~/.claude/settings.json is a plain file other tools write too; only the keys in
+claude/settings.mine.json are ours. Global skills follow skills.txt.
+Run ./install.sh --check to see where the machine has drifted from either.
 
 The Default profile in iTerm has been merged into the plist (not a symlink);
 relaunch iTerm to pick up the new values.

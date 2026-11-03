@@ -7,11 +7,17 @@ software.
 ## What it does
 
 The installer (`install.sh`) wires up configs — it does **not** install any
-software:
+software (global Claude skills, being config for the agent, are the exception):
 
 1. **Symlinks file-based configs** from this repo into their live locations
    (see the table below). Editing the live file *is* editing the repo file.
-2. **Merges iTerm settings** into the iTerm plist — the iTerm profile and
+2. **Merges the parts of shared files that are ours.** `~/.claude/settings.json`
+   is written by other tools too (Orca rewrites its hooks, `/config` writes
+   keys), so it is a plain file and the repo holds only
+   `claude/settings.mine.json`: our keys win, everything else stays, and
+   re-running adds nothing. Global skills follow `skills.txt`
+   (`<source> *` means every skill the source ships).
+3. **Merges iTerm settings** into the iTerm plist — the iTerm profile and
    app-level prefs can't be symlinks because the plist holds other state
    too, so the installer rewrites just the **Default** profile (matched by
    its stable Guid `DC718448-DCA9-4DE4-9CDC-989D58A849A4`) plus a curated
@@ -27,7 +33,10 @@ npm i -g @anthropic-ai/claude-code   # Claude Code CLI
 
 | Path in repo | Installed as | Mechanism |
 | --- | --- | --- |
-| `claude/settings.json` | `~/.claude/settings.json` | symlink |
+| `claude/settings.mine.json` | the keys we own inside `~/.claude/settings.json` | merge (`claude/settings-merge.sh`) |
+| `skills.txt` | global skills (`~/.claude/skills`, `~/.agents/.skill-lock.json`) | `npx skills add` (`claude/skills-sync.sh`) |
+| `claude/CLAUDE.md`, `claude/*.sh` hooks | `~/.claude/` | symlink |
+| `claude/CLAUDE.md` | `~/.codex/AGENTS.md` (Codex reads the same principles) | symlink |
 | `claude/statusline.sh` | `~/.claude/statusline.sh` | symlink |
 | `ghostty/config` | `~/.config/ghostty/config` | symlink |
 | `iterm/Default.json` | Default profile inside `~/Library/Preferences/com.googlecode.iterm2.plist` | plist merge by Guid |
@@ -56,6 +65,16 @@ cd ~/dotfiles && ./install.sh
 > Already-open iTerm windows keep their old settings until relaunch.
 
 ## Updating
+
+See where this machine has drifted from what the repo owns (changes nothing):
+
+```bash
+./install.sh --check
+```
+
+A key of ours changed live (say, through `/config`): copy it into
+`claude/settings.mine.json`. A new global skill: add it to `skills.txt`, then
+`claude/skills-sync.sh apply`.
 
 Because file-based configs are symlinks, just edit the live file (e.g.
 change `font-size` in Ghostty's settings UI, or hand-edit
