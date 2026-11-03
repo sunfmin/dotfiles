@@ -1,4 +1,4 @@
-# Global Claude config
+# 全局 agent 原则
 
 这份文件只写怎么想，不写具体怎么做。具体做法各有自己的家：项目的 CLAUDE.md 和 docs、工具自己的 `--help` 和 skill、gate 脚本、hook。去那里找。找不到的约定，说明它还缺一个家：照 6、7 给它安一个，不往这里加。
 
