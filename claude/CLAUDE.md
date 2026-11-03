@@ -1,4 +1,4 @@
-# Global Claude config
+# 全局 agent 原则
 
 ## 原则
 
