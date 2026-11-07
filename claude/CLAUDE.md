@@ -54,6 +54,7 @@ afkconvoy 的 fleet 自己发（control ADR 0003）：配了 cut 的 repo，flee
 
 ## 工具链（6）
 
+- **给我看文件**（报告、图片、HTML……）：先判断机器是不是远程的（`$SSH_CONNECTION` 非空就是）。远程的就照 `mac-host` skill「给人看东西」用 Orca 打开，HTML 显示不正常就自己起服务器，用 Orca 内置浏览器打开；不用 `open`，那台桌面没人看。本地才用 `open`。
 - **GitHub API**：GraphQL 额度用尽时，切换到 REST API 继续；REST 额度用尽时，切换到 GraphQL 继续。
 - **Python**：一律 `uv`（`uv run` / `uvx` / `uv add`），不用系统 `python3`、`pip`、手管 venv；一行验证也是 `uv run --with <pkg> python -c '...'`。细则见 `mypython` skill。
 - **环境变量**：一律 `mytokens` 管，每个项目一个 Profile（项目名），不写 `.env`、shell rc 或仓库。
