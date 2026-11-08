@@ -69,6 +69,7 @@ afkconvoy 的 fleet 自己发（control ADR 0003）：配了 cut 的 repo，flee
   - 其他 `source` 是第三方：不改，报告里写明要改什么。
 - **shell**：Bash 工具跑的是 zsh（数组下标从 1 开始），`/bin/bash` 是 3.2；两者都没有 `declare -A`。
 - **sudo**（仅限 admin 用户；标准用户见下条，不用 sudo）：没有 tty，每条都写 `SUDO_ASKPASS=$HOME/.local/bin/askpass sudo -A <cmd>`。会弹窗让我逐条批准；被拒就是失败，不重试。
+- **SSH 私钥只在 1Password**（没有 `~/.ssh/id_ed25519` 文件，sudoplz 解不开）：上条的 askpass 换成 `$HOME/.local/bin/askpass-op`，它用 `op read` 读 `op://Private/sudo-<LocalHostName>/password`（账号 my.1password.com），每次弹 Touch ID。条目不存在就让我建，密码不经你手。
 - **标准用户（非 admin）**：先用 `dseditgroup -o checkmember -m "$(id -un)" admin` 判断。回答 `NOT a member` 就是没有 root，sudo 也不可用。装什么、装到哪、brew 怎么装（`~/homebrew`），都照 `mac-host` skill 做；不往系统目录或别的用户的目录写，不为了装东西找 sudo。
 - **Flux**：手动跑（`cargo flux`、`./verify.sh`、`--only-check`……）也带 `FLUXFLAGS="-Ftimings -Ffixpoint-timeout=20 -Fcatch-bugs"`。不带的话一个卡住的 fixpoint 查询能无声跑几十分钟（实测 30+ 分钟、6.5GB）。超时 = 那个函数的 spec / 循环要拆小，不是调大时限。
 - **下载和安装**：先查本地缓存（`~/.cache/huggingface`、`~/.cache/modelscope`、下载目录、工具自带缓存），有就用。
