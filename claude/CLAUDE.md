@@ -44,7 +44,7 @@
 ## 给 factorium 开票
 
 - 票开在 factorium 的本地 tracker（`factorium issue add <checkout> …`），不开 GitHub issue：factorium 不读 GitHub。内容拿不准的，consult 后再发。
-- 票一 ready 就会被 worker 接走，所以不能在挂上依赖之前 ready：有依赖的，先 `issue add --parked`，再逐个 `issue block --by <n>`，最后 `issue ready`。
+- 票一 ready 就会被 worker 接走，所以依赖在开票时一起给：`factorium issue add <checkout> <title> --blocked-by <n> …`。不要先开票再补 `issue block`，中间那段时间它已经 ready 了。
 - 能否开工只靠 block。发出后不 park：被挡住、想让 worker 先做别的、想自己做，都不是理由；要 worker 别碰，用 block 表达。
 - 改发出去的票前，先看有没有开工（`factorium issue show` 里有 `worker`，或 `factorium workers` 里有它）：没开工就直接 `issue edit`；已开工就不改，开新票，用到原票的结果就 block 在原票上。开工的 worker 看不到正文的改动；要告诉它，用 `issue comment`（下一个 worker 的 brief 会带上）。
 - 照验收条件逐条找真依赖，缺的补上；「有更好、没有也行」的软依赖不挂，正文写「有就用，不等它」。大迁移删旧实现前，核对旧实现每块功能都有 issue 挡在删除那张前面。
