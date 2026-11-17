@@ -38,19 +38,20 @@
 - 直接往主干 push、主干 rebase、`--force` / `--force-with-lease` 都要我明确说。
 - 任务做完 -> `gh pr create` 到默认分支（`git symbolic-ref refs/remotes/origin/HEAD` 现取）；分支已有 PR -> push 即更新。Body 写做了啥、怎么验证、哪些没验证；`Closes #n`。
 - 自己开的 PR 自己合：检查全绿（`gh pr checks`；没配检查的，就是你跑过的测试都过了），改动没出任务范围 -> `gh pr merge --delete-branch`，切回默认分支 `git pull`。合错了用 revert 撤回。
-- 配了 afkconvoy 的 repo 由它的 landing train 合，不手动合。别人的 PR 不合、不 approve。
+- factorium 管的 repo（`factorium checkout list` 里有的）：base 只由 factorium 的 promotion 写，不开 PR、不手动合、不往 base / proving 推；要改的开 factorium 的票（见下节）。别人的 PR 不合、不 approve。
 - 发现 PR 已被合 -> 同样删分支、切回默认分支 `git pull`。
 
-## GitHub issue
+## 给 factorium 开票
 
-- 一律打 `ready-for-agent`。内容拿不准的，consult 后再发。
-- 能否开工只靠 blocked by（GitHub issue dependencies，正文 `## Blocked by` 同步写）。发出后不摘、不换 `ready-for-agent`：被挡住、想让 fleet 先做别的、想自己做，都不是理由；要 fleet 别碰，用 blocked by 表达。
-- 改发出去的票前，先看有没有开工（有 `convoy:branch` 评论、被 claim、有 PR）：没开工就直接改正文；已开工就不改，开新票，用到原票的结果就 blocked by 原票。开工的 worker 看不到正文的改动。
+- 票开在 factorium 的本地 tracker（`factorium issue add <checkout> …`），不开 GitHub issue：factorium 不读 GitHub。内容拿不准的，consult 后再发。
+- 票一 ready 就会被 worker 接走，所以不能在挂上依赖之前 ready：有依赖的，先 `issue add --parked`，再逐个 `issue block --by <n>`，最后 `issue ready`。
+- 能否开工只靠 block。发出后不 park：被挡住、想让 worker 先做别的、想自己做，都不是理由；要 worker 别碰，用 block 表达。
+- 改发出去的票前，先看有没有开工（`factorium issue show` 里有 `worker`，或 `factorium workers` 里有它）：没开工就直接 `issue edit`；已开工就不改，开新票，用到原票的结果就 block 在原票上。开工的 worker 看不到正文的改动；要告诉它，用 `issue comment`（下一个 worker 的 brief 会带上）。
 - 照验收条件逐条找真依赖，缺的补上；「有更好、没有也行」的软依赖不挂，正文写「有就用，不等它」。大迁移删旧实现前，核对旧实现每块功能都有 issue 挡在删除那张前面。
 
 ## Homebrew 项目的发版
 
-afkconvoy 的 fleet 自己发（control ADR 0003）：配了 cut 的 repo，fleet 一 idle 就切版本、发布、安装，host runner 自己换到新版。不手动发；发版失败看 escalate 票和 watch 的记录（control ADR 0005）。还没配 cut 的（`afkconvoy config <checkout>` 的答复里没有 `cut`），开票让它配上。
+factorium 自己发：repo 的 `factorium.toml` 里有 `[cut]` 的，checkout 一 idle（或最早没切的落地等过 `cut_bound`）就切版本、发布、安装，daemon 自己换到新版。不手动发；发版失败由 factorium 的 watch 处理，看 `factorium watch reports`。factorium 管的 repo 里还没有 `[cut]` 的，开票让它配上。
 
 ## 工具链（6）
 
@@ -62,7 +63,7 @@ afkconvoy 的 fleet 自己发（control ADR 0003）：配了 cut 的 repo，flee
   - 加 / 改：非密值 `mytokens put <project> --set "NAME=value"`；密值 `mytokens put <project> --fields "NAME"`（弹窗，值不经过你）
   - 列名字：`mytokens list`
   - 新建任何凭据（token、密钥、部署 key）前，先在这里查有没有现成的。
-- **找我**：要我拍板或动手的事，fleet 里照 brief escalate，由 afkconvoy 的问答 session 推到我手机问我；交互会话里写在报告最前面。不另外推送。
+- **找我**：要我拍板或动手的事，factorium 的 worker 用 `factorium worker escalate` 交给 watch，watch 只把花钱的事写进 `factorium watch report --human`，我在 `factorium doctor` 里看；交互会话里写在报告最前面。不另外推送。
 - **skills**：`npx skills` 装在 `~/.agents/skills/<name>/`（链到 `~/.claude/skills/`），**那里不改**，`npx skills update` 会覆盖。
   - 来源看 `~/.agents/.skill-lock.json` 每个 skill 的 `source` + `skillPath`。
   - `source` 在 `sunfmin/` 下是我的，仓库在 `~/Developments/<repo>`：改 `skillPath` 那个文件 -> commit + push -> `npx skills update`。
