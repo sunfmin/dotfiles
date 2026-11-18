@@ -246,12 +246,13 @@ fi
 if [ -n "$seven_day_pct" ]; then
     seven_day=$(color_for_pct "$seven_day_pct")"${seven_day_pct}%${reset}"
     if [ -n "$seven_day_reset_epoch" ] && [ "$seven_day_reset_epoch" != "null" ]; then
-        seven_day+="${dim}→${reset}$(format_epoch_time "$seven_day_reset_epoch" "datetime")"
         secs_left=$(( seven_day_reset_epoch - $(date +%s) ))
-        if [ "$secs_left" -ge 86400 ]; then
-            seven_day+=" ${dim}(${reset}$(( secs_left / 86400 ))d $(( secs_left % 86400 / 3600 ))h${dim} left)${reset}"
-        elif [ "$secs_left" -gt 0 ]; then
-            seven_day+=" ${dim}(${reset}$(( secs_left / 3600 ))h${dim} left)${reset}"
+        if [ "$secs_left" -gt 0 ]; then
+            days=$(( secs_left / 86400 )); hours=$(( secs_left % 86400 / 3600 ))
+            left=""
+            [ "$days" -gt 0 ] && left="${days}d"
+            [ "$hours" -gt 0 ] || [ -z "$left" ] && left+="${hours}h"
+            seven_day+="${dim}→${reset}${left}"
         fi
     fi
     line1="${dim}7d${reset} ${seven_day}${sep}${line1}"
