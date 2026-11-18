@@ -119,20 +119,11 @@ if git -C "$cwd" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     fi
 fi
 
-skip_perms=""
-parent_cmd=$(ps -o args= -p "$PPID" 2>/dev/null)
-if [[ "$parent_cmd" == *"--dangerously-skip-permissions"* ]]; then
-    skip_perms="⚡  "
-fi
-
 line1="${blue}${model_name}${reset}"
 line1+="${sep}"
 line1+="◐ ${pct_color}${pct_used}%${reset}"
-if [ -n "$skip_perms" ] || [ -n "$git_branch" ]; then
-    line1+="${sep}${skip_perms}"
-fi
 if [ -n "$git_branch" ]; then
-    line1+="${green}(${git_branch}${red}${git_dirty}${green})${reset}"
+    line1+="${sep}${green}${git_branch}${red}${git_dirty}${reset}"
 fi
 
 # ── Rate limits from stdin (primary) ───────────────────
