@@ -109,7 +109,6 @@ fi
 pct_color=$(color_for_pct "$pct_used")
 cwd=$(echo "$input" | jq -r '.cwd // ""')
 [ -z "$cwd" ] || [ "$cwd" = "null" ] && cwd=$(pwd)
-dirname=$(basename "$cwd")
 
 git_branch=""
 git_dirty=""
@@ -128,11 +127,12 @@ fi
 
 line1="${blue}${model_name}${reset}"
 line1+="${sep}"
-line1+="${dim}ctx${reset} ${pct_color}${pct_used}%${reset}"
-line1+="${sep}"
-line1+="${skip_perms}${cyan}${dirname}${reset}"
+line1+="◐ ${pct_color}${pct_used}%${reset}"
+if [ -n "$skip_perms" ] || [ -n "$git_branch" ]; then
+    line1+="${sep}${skip_perms}"
+fi
 if [ -n "$git_branch" ]; then
-    line1+=" ${green}(${git_branch}${red}${git_dirty}${green})${reset}"
+    line1+="${green}(${git_branch}${red}${git_dirty}${green})${reset}"
 fi
 
 # ── Rate limits from stdin (primary) ───────────────────
@@ -244,7 +244,17 @@ if [ -n "$five_hour_pct" ]; then
 fi
 
 if [ -n "$seven_day_pct" ]; then
-    line1_rates+="${sep}${dim}7d${reset} $(color_for_pct "$seven_day_pct")${seven_day_pct}%${reset}"
+    seven_day=$(color_for_pct "$seven_day_pct")"${seven_day_pct}%${reset}"
+    if [ -n "$seven_day_reset_epoch" ] && [ "$seven_day_reset_epoch" != "null" ]; then
+        seven_day+="${dim}→${reset}$(format_epoch_time "$seven_day_reset_epoch" "datetime")"
+        secs_left=$(( seven_day_reset_epoch - $(date +%s) ))
+        if [ "$secs_left" -ge 86400 ]; then
+            seven_day+=" ${dim}(${reset}$(( secs_left / 86400 ))d $(( secs_left % 86400 / 3600 ))h${dim} left)${reset}"
+        elif [ "$secs_left" -gt 0 ]; then
+            seven_day+=" ${dim}(${reset}$(( secs_left / 3600 ))h${dim} left)${reset}"
+        fi
+    fi
+    line1="${dim}7d${reset} ${seven_day}${sep}${line1}"
 fi
 
 if [ "$extra_enabled" = "true" ] && [ -n "$usage_data" ]; then
