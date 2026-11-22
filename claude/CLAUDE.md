@@ -17,7 +17,7 @@
 - 小事直接做：读已知文件、改一行、答已知事实，不 spawn subagent、不开 workflow、不全仓库大搜。
 - 超过 ~30s 先说一句在干嘛、大概多久；有阶段性结果先给。
 - 轮询和等待都设上限，到了就报告现状。
-- Bash 前台最多 20s（`settings.mine.json` 的 `BASH_MAX_TIMEOUT_MS`），超了自动转后台。转后台后马上挂 Monitor 打心跳，不空等通知：`s=$(date +%s); while sleep 30; do echo "+$(( $(date +%s)-s ))s $(date +%T) | $(tail -n1 <输出文件>)"; done`，`timeout_ms` 设成预计耗时，任务完成就 TaskStop 它。
+- Bash 前台最多 20s（`settings.mine.json` 的 `BASH_MAX_TIMEOUT_MS`），超了自动转后台。转后台后马上挂 Monitor 打心跳，不空等通知：`s=$(date +%s); while sleep 30; do echo "+$(( $(date +%s)-s ))s $(date +%T) | $(tail -n1 <输出文件>)"; done`，`timeout_ms` 设成预计耗时，任务完成就 TaskStop 它。心跳是给我看进度的，只在有人看的交互会话里挂；factorium worker 这类没人看的会话不挂心跳，等后台命令自己的退出通知（要盯的条件就用只在条件成立时才打印的 Monitor）。实测每次心跳都把整个上下文重读一遍：guild#66 有 30%、guild#34 有 50% 的输入 token 花在只回一句「还在跑」的唤醒上（slimfit#96）。
 - 等了 5 分钟还没完，查清卡在哪（进程、日志、网络、锁、`sample`），再决定修、换路还是停下报告。
 - 报告给实测秒数，优化前后都要有数。
 
