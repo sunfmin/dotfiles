@@ -5,7 +5,8 @@
 # Claude Code's own /config) write the live ~/.claude/settings.json too, so
 # the live file is a plain file, not a symlink, and is never stored here.
 #
-#   apply  merge mine into live: our keys win, other keys stay; arrays under
+#   apply  merge mine into live: our keys win, other keys stay, a key of ours
+#          set to null is removed from live; arrays under
 #          `permissions` are unioned; a hook of ours replaces any live hook
 #          with the same command, so re-running adds nothing
 #   check  print each key of ours the live file disagrees with; exit 1 if any
@@ -37,10 +38,11 @@ def apply($m):
       | $p * ($m.permissions // {})
       | reduce (($m.permissions // {}) | to_entries[] | select(.value | type == "array")) as $a (.;
           .[$a.key] = (reduce (($p[$a.key] // []) + $a.value)[] as $x ([]; if index([$x]) then . else . + [$x] end))))
-  | .hooks = ((.hooks // {}) | merge_hooks($m.hooks // {}));
+  | .hooks = ((.hooks // {}) | merge_hooks($m.hooks // {}))
+  | delpaths([$m | del(.hooks, .permissions) | paths(. == null)]);
 def drift($m):
   . as $l
-  | [ ($m | del(.hooks, .permissions) | paths(scalars) ) as $p
+  | [ ($m | del(.hooks, .permissions) | paths(type != "object" and type != "array") ) as $p
       | select(($l | getpath($p)) != ($m | getpath($p)))
       | ($p | map(tostring) | join(".")) ]
   + [ ($m.permissions // {}) | to_entries[] as $e
