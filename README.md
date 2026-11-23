@@ -14,8 +14,9 @@ software (global Claude skills, being config for the agent, are the exception):
 2. **Merges the parts of shared files that are ours.** `~/.claude/settings.json`
    is written by other tools too (Orca rewrites its hooks, `/config` writes
    keys), so it is a plain file and the repo holds only
-   `claude/settings.mine.json`: our keys win, everything else stays, and
-   re-running adds nothing. Global skills follow `skills.txt`
+   `claude/settings.mine.json`: our keys win, everything else stays, a key
+   of ours set to `null` is removed (how a retired key leaves every machine),
+   and re-running adds nothing. Global skills follow `skills.txt`
    (`<source> *` means every skill the source ships).
 3. **Merges iTerm settings** into the iTerm plist — the iTerm profile and
    app-level prefs can't be symlinks because the plist holds other state
