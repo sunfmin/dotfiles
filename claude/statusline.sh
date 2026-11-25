@@ -142,90 +142,22 @@ if [ -n "$stdin_five_pct" ]; then
     seven_day_reset_epoch=$(echo "$input" | jq -r '.rate_limits.seven_day.resets_at // empty')
 fi
 
-# ── Fallback: API call (cached) ────────────────────────
-# One cache per login: a session on a token from the environment (stablehand run,
-# a setup-token) must not show the cached windows of the keychain login.
-cache_key="keychain"
-[ -n "$CLAUDE_CODE_OAUTH_TOKEN" ] && cache_key=$(printf '%s' "$CLAUDE_CODE_OAUTH_TOKEN" | shasum -a 256 | cut -c1-12)
-[ -n "$CLAUDE_CONFIG_DIR" ] && [ -z "$CLAUDE_CODE_OAUTH_TOKEN" ] && cache_key=$(printf '%s' "$CLAUDE_CONFIG_DIR" | shasum -a 256 | cut -c1-12)
-cache_file="/tmp/claude/statusline-usage-cache-${cache_key}.json"
-cache_max_age=60
-mkdir -p /tmp/claude
-
-usage_data=""
-extra_enabled="false"
-
-if ! $has_stdin_rates; then
-    needs_refresh=true
-
-    if [ -f "$cache_file" ]; then
-        cache_mtime=$(stat -c %Y "$cache_file" 2>/dev/null || stat -f %m "$cache_file" 2>/dev/null)
-        now=$(date +%s)
-        cache_age=$(( now - cache_mtime ))
-        if [ "$cache_age" -lt "$cache_max_age" ]; then
-            needs_refresh=false
-            usage_data=$(cat "$cache_file" 2>/dev/null)
-        fi
-    fi
-
-    if $needs_refresh; then
-        token=""
-        if [ -n "$CLAUDE_CODE_OAUTH_TOKEN" ]; then
-            token="$CLAUDE_CODE_OAUTH_TOKEN"
-        elif command -v security >/dev/null 2>&1; then
-            blob=$(security find-generic-password -s "Claude Code-credentials" -w 2>/dev/null)
-            if [ -n "$blob" ]; then
-                token=$(echo "$blob" | jq -r '.claudeAiOauth.accessToken // empty' 2>/dev/null)
-            fi
-        fi
-        if [ -z "$token" ] || [ "$token" = "null" ]; then
-            creds_file="${HOME}/.claude/.credentials.json"
-            if [ -f "$creds_file" ]; then
-                token=$(jq -r '.claudeAiOauth.accessToken // empty' "$creds_file" 2>/dev/null)
-            fi
-        fi
-        if [ -z "$token" ] || [ "$token" = "null" ]; then
-            if command -v secret-tool >/dev/null 2>&1; then
-                blob=$(timeout 2 secret-tool lookup service "Claude Code-credentials" 2>/dev/null)
-                if [ -n "$blob" ]; then
-                    token=$(echo "$blob" | jq -r '.claudeAiOauth.accessToken // empty' 2>/dev/null)
-                fi
-            fi
-        fi
-
-        if [ -n "$token" ] && [ "$token" != "null" ]; then
-            response=$(curl -s --max-time 5 \
-                -H "Accept: application/json" \
-                -H "Content-Type: application/json" \
-                -H "Authorization: Bearer $token" \
-                -H "anthropic-beta: oauth-2025-04-20" \
-                -H "User-Agent: claude-code/2.1.34" \
-                "https://api.anthropic.com/api/oauth/usage" 2>/dev/null)
-            if [ -n "$response" ] && echo "$response" | jq -e '.five_hour' >/dev/null 2>&1; then
-                usage_data="$response"
-                echo "$response" > "$cache_file"
-            fi
-        fi
-        if [ -z "$usage_data" ] && [ -f "$cache_file" ]; then
-            usage_data=$(cat "$cache_file" 2>/dev/null)
-        fi
-    fi
-
-    if [ -n "$usage_data" ] && echo "$usage_data" | jq -e . >/dev/null 2>&1; then
-        five_hour_pct=$(echo "$usage_data" | jq -r '.five_hour.utilization // 0' | awk '{printf "%.0f", $1}')
-        five_hour_reset_iso=$(echo "$usage_data" | jq -r '.five_hour.resets_at // empty')
-        five_hour_reset_epoch=$(iso_to_epoch "$five_hour_reset_iso")
-        seven_day_pct=$(echo "$usage_data" | jq -r '.seven_day.utilization // 0' | awk '{printf "%.0f", $1}')
-        seven_day_reset_iso=$(echo "$usage_data" | jq -r '.seven_day.resets_at // empty')
-        seven_day_reset_epoch=$(iso_to_epoch "$seven_day_reset_iso")
-
-        extra_enabled=$(echo "$usage_data" | jq -r '.extra_usage.is_enabled // false')
-    fi
-else
-    if [ -f "$cache_file" ]; then
-        usage_data=$(cat "$cache_file" 2>/dev/null)
-        if [ -n "$usage_data" ] && echo "$usage_data" | jq -e . >/dev/null 2>&1; then
-            extra_enabled=$(echo "$usage_data" | jq -r '.extra_usage.is_enabled // false')
+# ── Fallback: stablehand's books ───────────────────────
+# A session stablehand run started on a setup token gets no rate_limits;
+# stablehand statusline (which runs this script via --then) keeps its
+# account's books fresh, so show those. No network here.
+books_age=""
+if ! $has_stdin_rates && [ -n "$STABLEHAND_ACCOUNT" ] && command -v stablehand >/dev/null 2>&1; then
+    books=$(stablehand status "$STABLEHAND_ACCOUNT" 2>/dev/null | jq -c '.accounts[0] // empty' 2>/dev/null)
+    if [ -n "$books" ]; then
+        five_hour_pct=$(echo "$books" | jq -r '.windows[]? | select(.name=="five_hour") | .used_percent // empty' | awk 'NF{printf "%.0f", $1}')
+        five_hour_reset_epoch=$(iso_to_epoch "$(echo "$books" | jq -r '.windows[]? | select(.name=="five_hour") | .resets_at // empty')")
+        seven_day_pct=$(echo "$books" | jq -r '.windows[]? | select(.name=="seven_day") | .used_percent // empty' | awk 'NF{printf "%.0f", $1}')
+        seven_day_reset_epoch=$(iso_to_epoch "$(echo "$books" | jq -r '.windows[]? | select(.name=="seven_day") | .resets_at // empty')")
+        read_epoch=$(iso_to_epoch "$(echo "$books" | jq -r '.read_at // empty')")
+        if [ -n "$read_epoch" ]; then
+            mins=$(( ($(date +%s) - read_epoch) / 60 ))
+            [ "$mins" -gt 10 ] && books_age="${dim}(${mins}m ago)${reset}"
         fi
     fi
 fi
@@ -254,12 +186,8 @@ if [ -n "$seven_day_pct" ]; then
     line1="${dim}7d${reset} ${seven_day}${sep}${line1}"
 fi
 
-if [ "$extra_enabled" = "true" ] && [ -n "$usage_data" ]; then
-    extra_pct=$(echo "$usage_data" | jq -r '.extra_usage.utilization // 0' | awk '{printf "%.0f", $1}')
-    extra_used=$(echo "$usage_data" | jq -r '.extra_usage.used_credits // 0' | awk '{printf "%.0f", $1/100}')
-    extra_limit=$(echo "$usage_data" | jq -r '.extra_usage.monthly_limit // 0' | awk '{printf "%.0f", $1/100}')
-    line1_rates+="${sep}${dim}extra${reset} $(color_for_pct "$extra_pct")\$${extra_used}${dim}/\$${extra_limit}${reset}"
-fi
+[ -n "$books_age" ] && line1_rates+=" ${books_age}"
+[ -n "$STABLEHAND_ACCOUNT" ] && line1_rates+="${sep}${cyan}${STABLEHAND_ACCOUNT}${reset}"
 
 # ── Output ──────────────────────────────────────────────
 printf "%b" "${line1}${line1_rates}"
