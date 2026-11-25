@@ -143,7 +143,12 @@ if [ -n "$stdin_five_pct" ]; then
 fi
 
 # ── Fallback: API call (cached) ────────────────────────
-cache_file="/tmp/claude/statusline-usage-cache.json"
+# One cache per login: a session on a token from the environment (stablehand run,
+# a setup-token) must not show the cached windows of the keychain login.
+cache_key="keychain"
+[ -n "$CLAUDE_CODE_OAUTH_TOKEN" ] && cache_key=$(printf '%s' "$CLAUDE_CODE_OAUTH_TOKEN" | shasum -a 256 | cut -c1-12)
+[ -n "$CLAUDE_CONFIG_DIR" ] && [ -z "$CLAUDE_CODE_OAUTH_TOKEN" ] && cache_key=$(printf '%s' "$CLAUDE_CONFIG_DIR" | shasum -a 256 | cut -c1-12)
+cache_file="/tmp/claude/statusline-usage-cache-${cache_key}.json"
 cache_max_age=60
 mkdir -p /tmp/claude
 
