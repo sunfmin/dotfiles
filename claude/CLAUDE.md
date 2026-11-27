@@ -44,10 +44,7 @@
 
 ## 给 factorium 开票
 
-- 票开在 factorium 的本地 tracker（`factorium issue add <checkout> …`），不开 GitHub issue：factorium 不读 GitHub。内容拿不准的，consult 后再发。
-- 票一 ready 就会被 worker 接走，所以依赖在开票时一起给：`factorium issue add <checkout> <title> --blocked-by <n> …`。不要先开票再补 `issue block`，中间那段时间它已经 ready 了。
-- 能否开工只靠 block（别的 checkout 的票用 `<checkout>#N`，要它发版装好用 `<checkout>#N@cut`）。发出后不 wait-for-human：被挡住、想让 worker 先做别的、想自己做，都不是理由；要 worker 别碰，用 block 表达。
-- 照验收条件逐条找真依赖，缺的补上；「有更好、没有也行」的软依赖不挂，正文写「有就用，不等它」。大迁移删旧实现前，核对旧实现每块功能都有 issue 挡在删除那张前面。
+照 rolesmith 角色 factorium-hand 的 skill file-issues（control 和每个 worker 的角色目录里都装着，也可直接读 `~/Developments/control/.claude/skills/rolesmith-factorium-hand-file-issues/SKILL.md`）。票开在 factorium 的本地 tracker，不开 GitHub issue；内容拿不准的，consult 后再发。
 
 ## Homebrew 项目的发版
 
@@ -58,10 +55,10 @@ factorium 自己发：repo 的 `factorium.toml` 里有 `[cut]` 的，checkout �
 - **给我看文件**（报告、图片、HTML……）：先执行 `~/.claude/skills/mac-host/scripts/where-is-the-user.sh`，它打印 `remote` 就照 `mac-host` skill「给人看东西」用 Orca 打开，HTML 显示不正常就自己起服务器，用 Orca 内置浏览器打开；不用 `open`，那台桌面没人看。打印 `local` 才用 `open`。
 - **GitHub API**：GraphQL 额度用尽时，切换到 REST API 继续；REST 额度用尽时，切换到 GraphQL 继续。
 - **Python**：一律 `uv`（`uv run` / `uvx` / `uv add`），不用系统 `python3`、`pip`、手管 venv；一行验证也是 `uv run --with <pkg> python -c '...'`。细则见 `mypython` skill。
-- **环境变量**：一律 `mytokens` 管，每个项目一个 Profile（项目名），不写 `.env`、shell rc 或仓库。
-  - 带着跑：`(eval "$(mytokens env <project>)"; <cmd>)`
-  - 加 / 改：非密值 `mytokens put <project> --set "NAME=value"`；密值 `mytokens put <project> --fields "NAME"`（弹窗，值不经过你）
-  - 列名字：`mytokens list`
+- **环境变量**：一律 `optokens` 管（1Password vault，本地加密副本 5 分钟内不联网），每个项目一个 Profile（项目名，`--kind profile`），不写 `.env`、shell rc 或仓库。mytokens 在迁走（只剩个人 Mac 用）。
+  - 带着跑：`(eval "$(optokens env <project>)"; <cmd>)`；别的机器刚改过的值加 `--fresh`
+  - 加 / 改：非密值 `optokens put <project> --set "NAME=value"`；命令生成的密值 `--field-from-stdin "NAME"`；我知道的密值 `optokens put <project> --fields "NAME"`：它在 stderr 打一个一次性链接（tailnet 上，10 分钟），把链接给我，值不经过你
+  - 列名字：`optokens list`（JSON，从不含值）
   - 新建任何凭据（token、密钥、部署 key）前，先在这里查有没有现成的。
 - **找我**：要我拍板或动手的事，factorium 的 worker 用 `factorium worker escalate` 交给 watch，watch 只把花钱的事写进 `factorium watch report --human`，我在 `factorium doctor` 里看；交互会话里写在报告最前面。不另外推送。
 - **skills**：`npx skills` 装在 `~/.agents/skills/<name>/`（链到 `~/.claude/skills/`），**那里不改**，`npx skills update` 会覆盖。
